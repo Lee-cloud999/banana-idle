@@ -22,7 +22,13 @@
 
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('sw.js').catch(function () {});
+      var hadCtl = !!navigator.serviceWorker.controller, reloaded = false;
+      // 새 버전이 설치되면 한 번 자동으로 새로고침해서 옛 화면이 남지 않게 해요
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (!hadCtl || reloaded) { hadCtl = true; return; }
+        reloaded = true; location.reload();
+      });
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (r) { try { r.update(); } catch (e) {} }).catch(function () {});
     });
   }
 })();

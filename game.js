@@ -416,7 +416,7 @@
       elEvoPct.textContent = '신!';
       elEvoBar.style.width = '100%';
     }
-    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번';
+    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v7';
   }
 
   /* ---------- 환생 (프레스티지) ---------- */
@@ -529,6 +529,17 @@
     return { x: m.left - r.left + m.width / 2, y: m.top - r.top + m.height * 0.25 };
   }
   function flash() { elMon.classList.remove('hit'); void elMon.offsetWidth; elMon.classList.add('hit'); }
+  function shoot() {
+    var r = elStage.getBoundingClientRect(), f = elFaceWrap.getBoundingClientRect(), m = elMonBody.getBoundingClientRect();
+    var sx = f.left - r.left + f.width * 0.8, sy = f.top - r.top + f.height * 0.55;
+    var ex = m.left - r.left + m.width * 0.35, ey = m.top - r.top + m.height * 0.55;
+    var b = document.createElement('div');
+    b.className = 'shot'; b.style.left = sx + 'px'; b.style.top = sy + 'px';
+    b.style.setProperty('--dx', (ex - sx) + 'px'); b.style.setProperty('--dy', (ey - sy) + 'px');
+    b.innerHTML = '<svg viewBox="0 0 64 64"><use href="#i-banana"/></svg>';
+    elFx.appendChild(b);
+    setTimeout(function () { if (b.parentNode) b.parentNode.removeChild(b); }, 330);
+  }
   function lunge() { elFaceWrap.classList.remove('atk'); void elFaceWrap.offsetWidth; elFaceWrap.classList.add('atk'); }
   function spawnMon() {
     var si = Math.min(stageIndex(), 5);
@@ -575,7 +586,7 @@
     if (!battle.on && !mon.alive) { mon.spawnIn -= dt; if (mon.spawnIn <= 0) spawnMon(); }
     atkT -= dt;
     if (atkT <= 0 && (battle.on || mon.alive)) {
-      atkT = ATK_INT; lunge();
+      atkT = ATK_INT; lunge(); shoot();
       hitTarget(autoDps() * ATK_INT, false);
     }
   }

@@ -238,8 +238,11 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 @keyframes monin { from { transform: translateX(40px) scale(.7); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes mondie { to { transform: scale(.4) translateY(10px); opacity: 0; } }
 @keyframes monhit { 0% { filter: brightness(2.2); transform: translateX(6px); } 100% { filter: none; transform: none; } }
-@keyframes lunge { 0% { transform: translateX(0); } 35% { transform: translateX(16%) rotate(5deg); } 100% { transform: none; } }
-@media (prefers-reduced-motion: reduce) { .mon .mbody, .mon.in, .mon.hit .mbody, .faces.atk { animation: none; } .mon.die { animation: none; opacity: 0; } }
+.shot { position: absolute; width: 26px; height: 26px; margin: -13px 0 0 -13px; pointer-events: none; animation: shot .3s ease-in forwards; filter: drop-shadow(0 0 6px rgba(255,210,63,.9)); }
+.shot svg { width: 100%; height: 100%; animation: spin .3s linear infinite; }
+@keyframes shot { to { transform: translate(var(--dx), var(--dy)); } }
+@keyframes lunge { 0% { transform: translateX(0); } 35% { transform: translateX(24%) rotate(8deg); } 100% { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .shot, .shot svg, .mon .mbody, .mon.in, .mon.hit .mbody, .faces.atk { animation: none; } .mon.die { animation: none; opacity: 0; } }
 
 /* 보스전 */
 .battle { display: flex; align-items: center; gap: 10px; background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 8px 10px; }
