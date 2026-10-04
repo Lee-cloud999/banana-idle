@@ -235,6 +235,21 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 .modal .btns .go { background: var(--leaf); color: #fff; border: 0; border-bottom: 5px solid rgba(0,0,0,.22); }
 .item .ms { font-size: 11.5px; color: var(--brown); }
 
+.shop-bar { display: flex; align-items: center; gap: 6px; }
+.shop-bar .shop-head { flex: 1; margin: 2px; }
+.mini { flex: none; background: var(--panel); color: var(--ink); border: 2px solid var(--line); border-radius: 999px; padding: 4px 11px; font-size: 13px; cursor: pointer; }
+.mini[hidden] { display: none; }
+.modal .card.tall { max-height: calc(100% - 8px); overflow-y: auto; align-items: stretch; }
+.modal .list { display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.modal .lrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; align-items: center; background: var(--panel-2); border: 2px solid var(--line); border-radius: 12px; padding: 7px 10px; }
+.modal .lrow b { font-weight: 600; font-size: 14px; overflow-wrap: anywhere; }
+.modal .lrow b i { font-style: normal; font-weight: 400; color: var(--muted); font-size: 12px; }
+.modal .lrow span { grid-column: 1; font-size: 12.5px; color: var(--muted); }
+.modal .lrow button { grid-column: 2; grid-row: 1 / span 2; background: var(--leaf); color: #fff; border: 0; border-radius: 10px; padding: 7px 10px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+.modal .lrow button:disabled { background: var(--line); color: var(--muted); cursor: default; }
+.modal .lrow.done { background: var(--banana); border-color: var(--banana-deep); }
+.modal .lrow.done span, .modal .lrow.done b { color: var(--brown); }
+
 /* 알림 */
 .toast { position: fixed; z-index: 70; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); max-width: min(92vw, 420px); background: var(--ink); color: var(--bg); border-radius: 999px; padding: 9px 18px; font-size: 14px; text-align: center; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
@@ -306,7 +321,7 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
     <div class="pt"><b id="prestTitle">바나나 씨앗 0개</b><span id="prestSub"></span></div>
     <button id="prestBtn" type="button">환생</button>
   </section>
-  <div class="shop-head">업그레이드</div>
+  <div class="shop-bar"><div class="shop-head">업그레이드</div><button type="button" class="mini" id="perkBtn" hidden>씨앗 상점</button><button type="button" class="mini" id="achBtn">업적</button></div>
   <section class="shop" id="shop" aria-label="업그레이드 목록"></section>
   <footer class="foot">
     <span id="stats">자동으로 저장돼요</span>
