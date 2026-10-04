@@ -1,0 +1,18 @@
+// 바나나 쑥쑥용 Firestore 규칙 조각
+// 이 프로젝트(maeum-jogak2)는 다른 앱도 함께 쓰고 있어서, 기존 규칙을 통째로 바꾸면 안 돼요.
+// 콘솔 → Firestore Database → 규칙 에서 기존 규칙의
+//   match /databases/{database}/documents { ... }
+// 안쪽에 아래 'match /game_saves/{uid}' 블록만 추가하고 게시해요.
+
+    // 바나나 쑥쑥: 로그인한 본인의 저장 문서(game_saves/내uid)만 읽고 쓸 수 있어요.
+    match /game_saves/{uid} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['uid', 'total', 'data'])
+        && request.resource.data.uid == uid
+        && request.resource.data.total is number
+        && request.resource.data.data is string
+        && request.resource.data.data.size() < 5000;
+    }

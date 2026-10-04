@@ -1,0 +1,47 @@
+# 바나나 쑥쑥
+
+바나나를 눌러 수확하고, 업그레이드로 자동 수익을 늘려 진화시키는 방치형 키우기 게임이에요.
+설치할 수 있는 PWA이고, 회원가입·로그인(Firebase)으로 기록을 클라우드(Firestore)에 저장해요. 로그인하지 않아도 게스트로 플레이할 수 있어요.
+
+## 파일 구성
+
+| 파일 | 하는 일 |
+| --- | --- |
+| `index.html` | 화면과 스타일 |
+| `game.js` | 게임 규칙 (수익, 업그레이드, 진화, 오프라인 보상) |
+| `auth.js` | 로그인 화면, 클라우드 저장·불러오기 |
+| `cloud.js` | Firebase 연결 (라이브러리 없이 REST로 직접 호출) |
+| `config.js` | Firebase 설정값 (직접 채워요) |
+| `sw.js`, `manifest.webmanifest`, `icons/` | PWA 설치와 오프라인 실행 |
+| `firebase/firestore.rules` | Firestore 보안 규칙 조각 (이 게임 몫) |
+
+## 설정 순서
+
+1. **Firebase 프로젝트 정하기**: https://console.firebase.google.com 에서 프로젝트를 새로 만들거나 이미 쓰는 프로젝트를 골라요. (현재 설정은 `maeum-jogak2` 프로젝트예요. 같은 프로젝트를 쓰면 로그인 계정도 서로 공유돼요.)
+2. **웹 앱 등록하기**: 프로젝트 개요에서 웹 아이콘(`</>`)을 눌러 앱을 등록해요. 호스팅은 설정하지 않아도 돼요. 등록하면 `firebaseConfig`가 나와요.
+3. **이메일 로그인 켜기**: 빌드 → Authentication → 시작하기 → 로그인 방법에서 "이메일/비밀번호"를 사용 설정해요.
+4. **Firestore 만들기**: 빌드 → Firestore Database → 데이터베이스 만들기. 위치는 `asia-northeast3`(서울)을 추천해요. 모드는 프로덕션 모드로 시작해요.
+5. **보안 규칙 추가하기**: Firestore Database → 규칙 탭을 열어요.
+   - 새 프로젝트라면 `firebase/firestore.rules`의 `match /game_saves/{uid}` 블록을 `match /databases/{database}/documents { ... }` 안에 넣고 게시해요.
+   - 이미 다른 앱이 쓰는 프로젝트라면 기존 규칙은 그대로 두고 이 블록만 **추가**해요. 규칙 전체를 바꾸면 다른 앱이 멈출 수 있어요.
+6. **허용 도메인 추가**: Authentication → 설정 → 승인된 도메인에 배포 주소의 도메인을 추가해요. 예: `아이디.github.io`
+7. **설정값 넣기**: `firebaseConfig`의 `apiKey`와 `projectId`를 `config.js`에 붙여 넣어요.
+8. **GitHub Pages 켜기**: 저장소의 Settings → Pages 에서 Branch를 `main`, 폴더를 `/ (root)`로 정하고 Save를 눌러요.
+
+> API 키에 "HTTP 리퍼러" 제한을 걸었다면 `아이디.github.io/*`도 허용 목록에 넣어야 해요.
+
+## 고칠 때 알아 둘 것
+
+- 파일을 고쳐서 올릴 때는 `sw.js` 맨 위의 `VERSION` 숫자를 하나 올려요. 그래야 옛 저장본이 정리돼요.
+- Firebase `apiKey`는 웹 앱용 공개 값이라 코드에 있어도 괜찮아요. 대신 `firestore.rules`를 꼭 게시해 두세요. 규칙이 열려 있으면 누구나 저장을 읽고 쓸 수 있어요.
+- 비밀번호 재설정은 Firebase가 보내는 메일의 링크로 해요. 메일이 스팸함에 들어갈 수 있어요. 메일 문구는 Authentication → 템플릿에서 한국어로 바꿀 수 있어요.
+- 저장 기록은 브라우저에서 올리는 값이라, 마음먹으면 조작할 수 있어요. 랭킹을 만들 때는 서버 쪽 검증이 따로 필요해요.
+
+## 내 컴퓨터에서 먼저 열어 보기
+
+```
+python3 -m http.server 8000
+```
+
+그다음 브라우저에서 http://localhost:8000 을 열어요. 서비스 워커는 `localhost`나 `https`에서만 동작해요.
+로그인을 시험하려면 Authentication → 설정 → 승인된 도메인에 `localhost`가 들어 있는지 확인해요.

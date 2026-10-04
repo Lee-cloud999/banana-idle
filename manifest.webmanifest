@@ -1,0 +1,20 @@
+{
+  "name": "바나나 쑥쑥",
+  "short_name": "바나나쑥쑥",
+  "description": "바나나를 눌러 수확하고 진화시키는 방치형 키우기 게임",
+  "lang": "ko",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "id": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#d6efe6",
+  "theme_color": "#d6efe6",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
