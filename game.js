@@ -9,16 +9,28 @@
     { name: '아기 바나나', at: 0, mult: 1, scale: 0.74 },
     { name: '바나나', at: 2000, mult: 1.5, scale: 0.88 },
     { name: '황금 바나나', at: 80000, mult: 2, scale: 1.0 },
-    { name: '바나나 왕', at: 3000000, mult: 3, scale: 1.06 }
+    { name: '바나나 왕', at: 3000000, mult: 3, scale: 1.04 },
+    { name: '전설의 바나나', at: 150000000, mult: 4, scale: 1.07 },
+    { name: '우주 바나나', at: 10000000000, mult: 6, scale: 1.1 },
+    { name: '바나나 신', at: 1000000000000, mult: 10, scale: 1.12 }
   ];
+  var MILESTONES = [25, 50, 100, 150, 200, 250];   // 이 레벨에 닿을 때마다 그 업그레이드 효과 ×2
+  var SEED_BASE = 100000000;                       // 이번 판에 1억 개를 모으면 씨앗 1개
+  var SEED_BONUS = 0.1;                            // 씨앗 하나당 수익 +10%
   var UPGRADES = [
     { id: 'hand', name: '튼튼한 손', base: 10, grow: 1.55, tap: 1 },
     { id: 'monkey', name: '아기 원숭이', base: 15, grow: 1.15, ps: 0.5 },
     { id: 'tree', name: '바나나 나무', base: 130, grow: 1.15, ps: 4 },
     { id: 'farm', name: '바나나 농장', base: 1400, grow: 1.15, ps: 32 },
-    { id: 'factory', name: '바나나 공장', base: 16000, grow: 1.15, ps: 260 }
+    { id: 'factory', name: '바나나 공장', base: 16000, grow: 1.15, ps: 260 },
+    { id: 'lab', name: '바나나 연구소', base: 200000, grow: 1.15, ps: 2100 },
+    { id: 'rocket', name: '바나나 로켓', base: 2400000, grow: 1.15, ps: 17000 },
+    { id: 'portal', name: '바나나 차원문', base: 30000000, grow: 1.15, ps: 140000 }
   ];
   var ICONS = {
+    lab: '<svg viewBox="0 0 40 40"><path d="M15 5h10M17 5v10L8 32a3 3 0 0 0 3 4h18a3 3 0 0 0 3-4L23 15V5" fill="#d7f1ff" stroke="#2f5683" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><path d="M11 26h18l3 6a3 3 0 0 1-3 4H11a3 3 0 0 1-3-4z" fill="#ffd23f" stroke="#2f5683" stroke-width="2.5" stroke-linejoin="round"/><circle cx="18" cy="30" r="2" fill="#fff"/><circle cx="24" cy="32" r="1.5" fill="#fff"/></svg>',
+    rocket: '<svg viewBox="0 0 40 40"><path d="M20 3c7 5 9 13 8 22H12c-1-9 1-17 8-22z" fill="#f4f6fa" stroke="#3b4752" stroke-width="2.5" stroke-linejoin="round"/><circle cx="20" cy="15" r="4" fill="#6aa0d6" stroke="#3b4752" stroke-width="2.5"/><path d="M12 22l-5 8 6-2M28 22l5 8-6-2" fill="#e0603b" stroke="#6a2d17" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 29h8l-4 8z" fill="#ffd23f" stroke="#c77700" stroke-width="2" stroke-linejoin="round"/></svg>',
+    portal: '<svg viewBox="0 0 40 40"><ellipse cx="20" cy="20" rx="12" ry="16" fill="#3a1f6e" stroke="#b58cff" stroke-width="3"/><ellipse cx="20" cy="20" rx="7" ry="11" fill="#7a4bd8" stroke="#d7c0ff" stroke-width="2"/><ellipse cx="20" cy="20" rx="3" ry="6" fill="#ffd23f"/></svg>',
     hand: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="#f0a500" stroke-width="3" stroke-dasharray="4 4"/><circle cx="20" cy="20" r="9" fill="#ffd23f" stroke="#6a3d1b" stroke-width="3"/><circle cx="20" cy="20" r="2.5" fill="#6a3d1b"/></svg>',
     monkey: '<svg viewBox="0 0 40 40"><circle cx="7" cy="19" r="5" fill="#a8672f" stroke="#6a3d1b" stroke-width="2.5"/><circle cx="33" cy="19" r="5" fill="#a8672f" stroke="#6a3d1b" stroke-width="2.5"/><circle cx="20" cy="20" r="13" fill="#a8672f" stroke="#6a3d1b" stroke-width="2.5"/><ellipse cx="20" cy="24" rx="8" ry="6.5" fill="#f3d3a4"/><circle cx="15.5" cy="18" r="2" fill="#2b1a0c"/><circle cx="24.5" cy="18" r="2" fill="#2b1a0c"/><path d="M17 26q3 2.5 6 0" stroke="#6a3d1b" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
     tree: '<svg viewBox="0 0 40 40"><rect x="17" y="18" width="6" height="18" rx="2" fill="#a8672f" stroke="#6a3d1b" stroke-width="2.5"/><circle cx="12" cy="14" r="8" fill="#4eb35a" stroke="#2c6e36" stroke-width="2.5"/><circle cx="28" cy="14" r="8" fill="#4eb35a" stroke="#2c6e36" stroke-width="2.5"/><circle cx="20" cy="9" r="8" fill="#5cc56a" stroke="#2c6e36" stroke-width="2.5"/><circle cx="14" cy="22" r="2.6" fill="#ffd23f" stroke="#6a3d1b" stroke-width="1.5"/><circle cx="26" cy="21" r="2.6" fill="#ffd23f" stroke="#6a3d1b" stroke-width="1.5"/></svg>',
@@ -96,13 +108,16 @@
   var state;
   function freshState() {
     var lv = {}; UPGRADES.forEach(function (u) { lv[u.id] = 0; });
-    return { bananas: 0, total: 0, taps: 0, levels: lv, lastSeen: Date.now(), dailyLast: '', dailyStreak: 0 };
+    return { bananas: 0, total: 0, run: 0, seeds: 0, resets: 0, taps: 0, levels: lv, lastSeen: Date.now(), dailyLast: '', dailyStreak: 0 };
   }
   function num(v) { v = +v; return isFinite(v) && v > 0 ? v : 0; }
   function sanitize(s) {
     var base = freshState();
     if (!s || typeof s !== 'object') return base;
-    base.bananas = num(s.bananas); base.total = Math.max(num(s.total), base.bananas); base.taps = Math.floor(num(s.taps));
+    base.bananas = num(s.bananas); base.total = Math.max(num(s.total), base.bananas);
+    base.run = s.run === undefined ? base.total : Math.min(Math.max(num(s.run), base.bananas), base.total);
+    base.seeds = Math.floor(num(s.seeds)); base.resets = Math.floor(num(s.resets));
+    base.taps = Math.floor(num(s.taps));
     base.lastSeen = num(s.lastSeen) || Date.now();
     base.dailyLast = /^\d{4}-\d{2}-\d{2}$/.test(s.dailyLast) ? s.dailyLast : '';
     base.dailyStreak = Math.min(7, Math.floor(num(s.dailyStreak)));
@@ -122,18 +137,24 @@
   }
 
   /* ---------- 계산 ---------- */
-  function stageIndex() {
+  function stageIndexFor(run) {
     var i = 0;
-    for (var k = 0; k < STAGES.length; k++) if (state.total >= STAGES[k].at) i = k;
+    for (var k = 0; k < STAGES.length; k++) if (run >= STAGES[k].at) i = k;
     return i;
   }
+  function stageIndex() { return stageIndexFor(state.run); }
   function stageMult() { return STAGES[stageIndex()].mult; }
+  function msMult(lv) { var m = 1; for (var k = 0; k < MILESTONES.length; k++) if (lv >= MILESTONES[k]) m *= 2; return m; }
+  function nextMs(lv) { for (var k = 0; k < MILESTONES.length; k++) if (lv < MILESTONES[k]) return MILESTONES[k]; return 0; }
+  function seedMult() { return 1 + SEED_BONUS * state.seeds; }
   function cost(u) { return Math.floor(u.base * Math.pow(u.grow, state.levels[u.id])); }
   function perSecond() {
     var s = 0;
-    UPGRADES.forEach(function (u) { if (u.ps) s += u.ps * state.levels[u.id]; });
-    return s * stageMult();
+    UPGRADES.forEach(function (u) { if (u.ps) s += u.ps * state.levels[u.id] * msMult(state.levels[u.id]); });
+    return s * stageMult() * seedMult();
   }
+  function earn(x) { state.bananas += x; state.total += x; state.run += x; }
+  function prestigeGain() { return Math.floor(Math.pow(state.run / SEED_BASE, 1 / 3)); }
   var comboStamps = [];
   function comboOn() {
     var now = Date.now();
@@ -141,7 +162,7 @@
     return comboStamps.length >= 10;
   }
   function tapValue(withCombo) {
-    var v = (1 + state.levels.hand) * stageMult() + perSecond() * 0.04;
+    var v = (1 + state.levels.hand * msMult(state.levels.hand)) * stageMult() * seedMult() + perSecond() * 0.04;
     return withCombo && comboOn() ? v * 1.5 : v;
   }
 
@@ -219,7 +240,7 @@
     comboStamps.push(lastAction);
     var combo = comboOn();
     var gain = tapValue(true);
-    state.bananas += gain; state.total += gain; state.taps++;
+    earn(gain); state.taps++;
     var r = elStage.getBoundingClientRect();
     var x = clientX == null ? r.width / 2 : clientX - r.left;
     var y = clientY == null ? r.height * 0.55 : clientY - r.top;
@@ -271,7 +292,7 @@
     g.addEventListener('pointerdown', function (e) {
       e.preventDefault(); e.stopPropagation();
       var bonus = Math.max(perSecond() * 60, tapValue(false) * 30, 100);
-      state.bananas += bonus; state.total += bonus;
+      earn(bonus);
       var r = elStage.getBoundingClientRect();
       popAt(e.clientX - r.left, e.clientY - r.top, '+' + fmt(bonus), true);
       lastAction = Date.now();
@@ -293,11 +314,11 @@
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'item cant';
       b.innerHTML = '<span class="ico">' + ICONS[u.id] + '</span>' +
-        '<span><span class="name">' + u.name + ' <span class="lv"></span></span><span class="desc"></span></span>' +
+        '<span><span class="name">' + u.name + ' <span class="lv"></span></span><span class="desc"></span><span class="ms"></span></span>' +
         '<span class="buy"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#i-banana"/></svg><span class="c"></span></span>';
       b.addEventListener('click', function () { buy(u); });
       elShop.appendChild(b);
-      rows[u.id] = { el: b, lv: b.querySelector('.lv'), desc: b.querySelector('.desc'), cost: b.querySelector('.c') };
+      rows[u.id] = { el: b, lv: b.querySelector('.lv'), desc: b.querySelector('.desc'), ms: b.querySelector('.ms'), cost: b.querySelector('.c') };
     });
   }
   function buy(u) {
@@ -314,31 +335,77 @@
     elCount.textContent = fmt(state.bananas);
     elRate.textContent = fmtRate(perSecond());
     elTap.textContent = fmtRate(tapValue(false));
-    var mult = stageMult();
+    var mult = stageMult() * seedMult();
     UPGRADES.forEach(function (u) {
-      var r = rows[u.id], c = cost(u), lv = state.levels[u.id], afford = state.bananas >= c;
+      var r = rows[u.id], c = cost(u), lv = state.levels[u.id], afford = state.bananas >= c, mm = msMult(lv), nm = nextMs(lv);
       r.lv.textContent = 'Lv.' + lv;
       r.cost.textContent = fmt(c);
       r.el.classList.toggle('cant', !afford);
       r.el.classList.toggle('ready', afford);
       r.el.setAttribute('aria-label', u.name + ' 레벨 ' + lv + ', 가격 ' + fmt(c) + '개' + (afford ? '' : ', 바나나가 부족해요'));
-      if (u.tap) r.desc.textContent = '탭당 +' + (u.tap * mult).toString().replace(/(\.\d)\d+/, '$1') + ' (지금 ' + fmtRate((1 + lv) * mult) + ')';
-      else r.desc.textContent = '초당 +' + fmtRate(u.ps * mult) + ' (지금 ' + fmtRate(u.ps * lv * mult) + ')';
+      if (u.tap) r.desc.textContent = '탭당 +' + fmtRate(u.tap * mult * mm) + ' (지금 ' + fmtRate((1 + lv * mm) * mult) + ')';
+      else r.desc.textContent = '초당 +' + fmtRate(u.ps * mult * mm) + ' (지금 ' + fmtRate(u.ps * lv * mm * mult) + ')';
+      r.ms.textContent = nm ? 'Lv.' + nm + '에서 효과 ×2' : '효과 최대!';
     });
+    renderPrestige();
     var i = stageIndex(), next = STAGES[i + 1];
     if (next) {
-      var p = (state.total - STAGES[i].at) / (next.at - STAGES[i].at);
+      var p = (state.run - STAGES[i].at) / (next.at - STAGES[i].at);
       p = Math.max(0, Math.min(1, p));
       elEvoName.textContent = '다음: ' + next.name;
       elEvoPct.textContent = Math.floor(p * 100) + '%';
       elEvoBar.style.width = (p * 100) + '%';
     } else {
       elEvoName.textContent = '최고 단계예요';
-      elEvoPct.textContent = '왕!';
+      elEvoPct.textContent = '신!';
       elEvoBar.style.width = '100%';
     }
-    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확 · 탭 ' + state.taps.toLocaleString('ko-KR') + '번';
+    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번';
   }
+
+  /* ---------- 환생 (프레스티지) ---------- */
+  var elPrest = $('prest'), elPrestTitle = $('prestTitle'), elPrestSub = $('prestSub'), elPrestBtn = $('prestBtn');
+  function renderPrestige() {
+    var show = state.seeds > 0 || state.resets > 0 || state.run >= SEED_BASE / 20;
+    elPrest.hidden = !show;
+    if (!show) return;
+    var gain = prestigeGain();
+    elPrestTitle.textContent = '바나나 씨앗 ' + fmt(state.seeds) + '개 · 수익 +' + fmt(Math.round(state.seeds * SEED_BONUS * 100)) + '%';
+    elPrestBtn.disabled = gain < 1;
+    elPrestBtn.textContent = gain >= 1 ? '환생 +' + fmt(gain) : '환생';
+    elPrestSub.textContent = gain >= 1 ? '지금 환생하면 씨앗 ' + fmt(gain) + '개를 얻어요' : '이번 판에 ' + fmt(SEED_BASE) + '개를 모으면 환생할 수 있어요';
+  }
+  function showPrestige() {
+    var gain = prestigeGain();
+    if (gain < 1 || document.querySelector('.modal.prestige')) return;
+    var after = state.seeds + gain;
+    var m = document.createElement('div');
+    m.className = 'modal prestige'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+    m.innerHTML = '<div class="card"><img src="img/surprise.png" alt=""><h2>환생할까요?</h2>' +
+      '<p>씨앗 <b>' + fmt(gain) + '개</b>를 얻어요 (모두 ' + fmt(after) + '개)</p>' +
+      '<ul class="plist"><li>수익이 <b>+' + fmt(Math.round(after * SEED_BONUS * 100)) + '%</b>가 돼요 (지금 +' + fmt(Math.round(state.seeds * SEED_BONUS * 100)) + '%)</li>' +
+      '<li>바나나, 업그레이드, 진화 단계는 <b>처음으로</b> 돌아가요</li>' +
+      '<li>씨앗, 출석 기록, 누적 수확은 <b>그대로</b> 남아요</li></ul>' +
+      '<div class="btns"><button type="button" class="no">아직이요</button><button type="button" class="go">환생하기</button></div></div>';
+    document.body.appendChild(m);
+    var no = m.querySelector('.no'), go = m.querySelector('.go'); no.focus();
+    function close() { if (m.parentNode) m.parentNode.removeChild(m); }
+    no.addEventListener('click', close);
+    go.addEventListener('click', function () {
+      close();
+      var gg = prestigeGain();                      // 그 사이 바뀌었을 수 있어요
+      if (gg < 1) return;
+      state.seeds += gg; state.resets++;
+      state.bananas = 0; state.run = 0;
+      UPGRADES.forEach(function (u) { state.levels[u.id] = 0; });
+      comboStamps = [];
+      shownStage = -1; applyStage(0, false);
+      Snd.play('evolve'); showBanner('환생! 씨앗 +' + fmt(gg));
+      lastAction = Date.now(); setFace('happy', 1500, true); say('happy');
+      save(); render();
+    });
+  }
+  elPrestBtn.addEventListener('click', showPrestige);
 
   /* ---------- 시간 흐름 ---------- */
   var lastTick = Date.now(), saveAcc = 0;
@@ -346,7 +413,7 @@
     var now = Date.now(), dt = Math.min((now - lastTick) / 1000, 0.5);
     lastTick = now;
     var g = perSecond() * dt;
-    if (g > 0) { state.bananas += g; state.total += g; }
+    if (g > 0) earn(g);
     if (faceNow === 'normal' && baseFace() === 'sleep') { showFace('sleep'); say('sleep', true); }
     if (faceNow === 'sleep' && baseFace() === 'normal') { showFace('normal'); }
     elCombo.classList.toggle('show', comboOn());
@@ -376,7 +443,7 @@
     document.body.appendChild(m);
     var ok = m.querySelector('.ok'); ok.focus();
     ok.addEventListener('click', function () {
-      state.bananas += gain; state.total += gain;
+      earn(gain);
       document.body.removeChild(m);
       Snd.play('chime');
       lastAction = Date.now(); setFace('happy', 1200);
@@ -417,7 +484,7 @@
       if (m.parentNode) m.parentNode.removeChild(m);
       if (!cur.claimable) return;
       var gain = dailyReward(cur.day);
-      state.bananas += gain; state.total += gain;
+      earn(gain);
       state.dailyLast = cur.today; state.dailyStreak = cur.day;
       var r = elStage.getBoundingClientRect();
       popAt(r.width / 2, r.height * 0.45, '+' + fmt(gain), true);
@@ -486,12 +553,11 @@
 
   /* ---------- 로그인/클라우드 연동용 API ---------- */
   function summarize(obj) {
-    var s = sanitize(obj), idx = 0;
-    for (var k = 0; k < STAGES.length; k++) if (s.total >= STAGES[k].at) idx = k;
-    return { total: s.total, stage: STAGES[idx].name, taps: s.taps, lastSeen: s.lastSeen };
+    var s = sanitize(obj);
+    return { total: s.total, stage: STAGES[stageIndexFor(s.run)].name, seeds: s.seeds, taps: s.taps, lastSeen: s.lastSeen };
   }
   function adopt(obj) {
-    Array.prototype.forEach.call(document.querySelectorAll('.modal.offline, .modal.daily'), function (m) { if (m.parentNode) m.parentNode.removeChild(m); });
+    Array.prototype.forEach.call(document.querySelectorAll('.modal.offline, .modal.daily, .modal.prestige'), function (m) { if (m.parentNode) m.parentNode.removeChild(m); });
     state = sanitize(obj);
     shownStage = -1; applyStage(stageIndex(), false);
     render(); checkOffline(); maybeDaily(); save();

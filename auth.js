@@ -47,7 +47,7 @@
     var c = e && e.code;
     if ((c === 'PERMISSION_DENIED' || c === 'OPERATION_NOT_ALLOWED' || c === 'INVALID_ARGUMENT') && !reported[c]) { reported[c] = 1; G.toast(errText(e)); }
   }
-  function stateKey(st) { return Math.floor(st.total) + '|' + Object.keys(st.levels).map(function (k) { return st.levels[k]; }).join(','); }
+  function stateKey(st) { return Math.floor(st.total) + '|' + (st.seeds || 0) + '|' + Object.keys(st.levels).map(function (k) { return st.levels[k]; }).join(','); }
 
   /* 이 기기가 마지막으로 클라우드와 맞춘 기록(계정별) */
   function syncedKey() { var u = cloud && cloud.user(); return u ? 'banana-ssuk-synced-' + u.id : null; }

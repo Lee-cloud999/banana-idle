@@ -96,12 +96,16 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 .faces { position: relative; aspect-ratio: 360 / 335; width: 100%; }
 .faces img { position: absolute; inset: 0; width: 100%; height: 100%; display: none; pointer-events: none; -webkit-user-drag: none; }
 .faces img.on { display: block; }
-.stage-2 .faces, .stage-3 .faces { filter: hue-rotate(-7deg) saturate(1.25) brightness(1.06) drop-shadow(0 0 12px rgba(255, 196, 40, .8)); }
+.stage-2 .faces { filter: hue-rotate(-7deg) saturate(1.25) brightness(1.06) drop-shadow(0 0 12px rgba(255, 196, 40, .8)); }
 .stage-3 .faces { filter: hue-rotate(-9deg) saturate(1.35) brightness(1.08) drop-shadow(0 0 18px rgba(255, 180, 20, .95)); }
 .crown { position: absolute; left: 57.5%; top: 13%; width: 28%; transform: translate(-50%, -84%) rotate(7deg); display: none; pointer-events: none; filter: drop-shadow(0 2px 0 rgba(106,61,27,.35)); }
-.stage-3 .crown { display: block; }
+.stage-4 .faces { filter: hue-rotate(-12deg) saturate(1.45) brightness(1.1) drop-shadow(0 0 22px rgba(255, 150, 20, 1)); }
+.stage-5 .faces { filter: hue-rotate(25deg) saturate(1.5) brightness(1.1) drop-shadow(0 0 24px rgba(120, 150, 255, 1)); }
+.stage-6 .faces { animation: rainbow 4s linear infinite; }
+@keyframes rainbow { 0% { filter: hue-rotate(0deg) saturate(1.6) brightness(1.12) drop-shadow(0 0 26px rgba(255, 220, 90, 1)); } 100% { filter: hue-rotate(360deg) saturate(1.6) brightness(1.12) drop-shadow(0 0 26px rgba(255, 220, 90, 1)); } }
+.stage-3 .crown, .stage-4 .crown, .stage-5 .crown, .stage-6 .crown { display: block; }
 .sparkles { position: absolute; inset: 0; pointer-events: none; display: none; }
-.stage-2 .sparkles, .stage-3 .sparkles { display: block; }
+.stage-2 .sparkles, .stage-3 .sparkles, .stage-4 .sparkles, .stage-5 .sparkles, .stage-6 .sparkles { display: block; }
 .sparkles i { position: absolute; width: 10px; height: 10px; background: #fff7c2; clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); animation: twinkle 2.2s ease-in-out infinite; }
 .sparkles i:nth-child(1) { left: 6%; top: 40%; animation-delay: 0s; }
 .sparkles i:nth-child(2) { left: 88%; top: 30%; animation-delay: .7s; width: 14px; height: 14px; }
@@ -159,7 +163,7 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 @keyframes spin { 0%, 100% { transform: rotate(-12deg) scale(1); } 50% { transform: rotate(12deg) scale(1.12); } }
 @keyframes banner { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.6); } 12% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); } 20% { transform: translate(-50%, -50%) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -80%) scale(1); } }
 @media (prefers-reduced-motion: reduce) {
-  .char-bob, .sparkles i, .gold svg { animation: none; }
+  .char-bob, .sparkles i, .gold svg, .stage-6 .faces { animation: none; }
   .char-wrap { transition: none; }
 }
 
@@ -216,6 +220,20 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 .modal .day.today b { color: var(--brown); }
 .modal .day.done { opacity: .5; }
 .modal .hint { font-size: 12.5px; }
+
+/* 환생 */
+.prest { display: flex; align-items: center; gap: 10px; background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 8px 10px 8px 12px; }
+.prest[hidden] { display: none; }
+.prest .pt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; font-size: 13px; color: var(--muted); }
+.prest .pt b { font-family: var(--font-display); font-weight: 400; font-size: 16px; color: var(--ink); overflow-wrap: anywhere; }
+.prest button { flex: none; background: var(--leaf); color: #fff; border: 0; border-bottom: 4px solid rgba(0,0,0,.22); border-radius: 13px; padding: 8px 14px; font-family: var(--font-display); font-size: 15px; cursor: pointer; }
+.prest button:disabled { background: var(--panel-2); color: var(--muted); border-bottom-color: var(--line); cursor: default; }
+.modal .plist { margin: 0; padding: 0; list-style: none; text-align: left; font-size: 13.5px; color: var(--muted); display: flex; flex-direction: column; gap: 3px; width: 100%; }
+.modal .plist b { color: var(--ink); font-weight: 600; }
+.modal .btns { display: flex; gap: 8px; width: 100%; margin-top: 6px; }
+.modal .btns button { flex: 1; min-width: 0; border-radius: 14px; padding: 10px 8px; font-family: var(--font-display); font-size: 17px; cursor: pointer; background: var(--panel-2); color: var(--ink); border: 2px solid var(--line); }
+.modal .btns .go { background: var(--leaf); color: #fff; border: 0; border-bottom: 5px solid rgba(0,0,0,.22); }
+.item .ms { font-size: 11.5px; color: var(--brown); }
 
 /* 알림 */
 .toast { position: fixed; z-index: 70; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); max-width: min(92vw, 420px); background: var(--ink); color: var(--bg); border-radius: 999px; padding: 9px 18px; font-size: 14px; text-align: center; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
@@ -284,6 +302,10 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
     <div class="banner" id="banner"></div>
   </section>
 
+  <section class="prest" id="prest" hidden>
+    <div class="pt"><b id="prestTitle">바나나 씨앗 0개</b><span id="prestSub"></span></div>
+    <button id="prestBtn" type="button">환생</button>
+  </section>
   <div class="shop-head">업그레이드</div>
   <section class="shop" id="shop" aria-label="업그레이드 목록"></section>
   <footer class="foot">
