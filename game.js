@@ -535,7 +535,7 @@
       elEvoPct.textContent = '신!';
       elEvoBar.style.width = '100%';
     }
-    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v24';
+    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v25';
   }
 
   /* ---------- 환생 (프레스티지) ---------- */
@@ -637,7 +637,9 @@
   var elMon = $('mon'), elMonBody = $('monBody'), elMonBar = $('monBar'), elMons = $('mons'), elWaveLbl = $('waveLbl'), elFaceWrap = $('lunger');
   var REGIONS = ['풀밭', '숲', '황금 들판', '동굴', '화산', '우주', '신들의 정원'];
   function autoDps() { return perSecond() + tapValue(false) * 1.5; }
+  var MON_IMG = { 0: 'img/mon1.png' };              // 직접 그린 몬스터 그림 (없는 번호는 임시 모양)
   function monSvg(i, boss) {
+    if (!boss && MON_IMG[i]) return '<img src="' + MON_IMG[i] + '" alt="" draggable="false">';
     var c = boss ? BOSSES[i].col : ['#7cc04f', '#e08a3b', '#7a8fe0', '#d95a8a', '#4fc0b8', '#9a6bdc', '#f2c230'][i % 7];
     var extra = (boss && i >= 2) || (!boss && i >= 3) ? '<path d="M16 14l3 7M44 14l-3 7" stroke="#2b1a0c" stroke-width="3" stroke-linecap="round"/>' : '';
     return '<svg viewBox="0 0 60 52" aria-hidden="true">' + extra + '<path d="M5 46C2 26 14 8 30 8s28 18 25 38z" fill="' + c + '" stroke="#2b1a0c" stroke-width="3" stroke-linejoin="round"/>' +
