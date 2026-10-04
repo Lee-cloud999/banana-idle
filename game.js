@@ -72,7 +72,7 @@
     { id: 'ch1', name: '두근두근', desc: '보물상자를 처음 열어요', ok: function (s) { return s.opened >= 1; } },
     { id: 'ch50', name: '상자 수집가', desc: '보물상자를 50개 열어요', ok: function (s) { return s.opened >= 50; } },
     { id: 'lgd', name: '전설의 장비', desc: '전설 등급 장비를 얻어요', ok: function (s) { return s.items.some(function (it) { return it.r >= 4; }); } },
-    { id: 'full', name: '풀 장착', desc: '모자·무기·안경·망토를 모두 껴요', ok: function (s) { return s.eq.hat && s.eq.weapon && s.eq.glasses && s.eq.cape; } },
+    { id: 'full', name: '풀 장착', desc: '장비 8칸을 모두 채워요', ok: function (s) { return SLOTS.every(function (x) { return s.eq[x.id]; }); } },
     { id: 'b1', name: '첫 승리', desc: '보스를 처음 물리쳐요', ok: function (s) { return bossCount(s) >= 1; } },
     { id: 'b6', name: '보스 사냥 끝', desc: '보스 6마리를 모두 물리쳐요', ok: function (s) { return bossCount(s) >= BOSSES.length; } },
     { id: 'd7', name: '개근상', desc: '7일 연속 출석', ok: function (s) { return s.dailyStreak >= 7; } }
@@ -83,7 +83,11 @@
     { id: 'hat', name: '모자', stat: '초당 수익', f: 1 },
     { id: 'weapon', name: '무기', stat: '탭·공격력', f: 1 },
     { id: 'glasses', name: '안경', stat: '몬스터 드롭·보상', f: 1 },
-    { id: 'cape', name: '망토', stat: '모든 수익', f: 0.6 }
+    { id: 'cape', name: '망토', stat: '모든 수익', f: 0.6 },
+    { id: 'boots', name: '신발', stat: '복귀(오프라인) 보상', f: 1 },
+    { id: 'scarf', name: '목도리', stat: '상자 나올 확률', f: 1 },
+    { id: 'shield', name: '방패', stat: '보스전 공격력', f: 1 },
+    { id: 'wings', name: '날개', stat: '환생 씨앗', f: 0.5 }
   ];
   var RAR = [
     { name: '일반', col: '#8d96a1', v: 0.03 }, { name: '고급', col: '#3fb757', v: 0.08 },
@@ -93,12 +97,16 @@
     hat: ['밀짚모자', '털실 모자', '마법사 모자', '기사 투구', '별빛 왕관'],
     weapon: ['나무 막대', '돌 도끼', '강철 검', '번개 지팡이', '황금 바나나 검'],
     glasses: ['동그란 안경', '선글라스', '하트 안경', '고글', '은하 안경'],
-    cape: ['천 망토', '붉은 망토', '푸른 망토', '보라 망토', '무지개 망토']
+    cape: ['천 망토', '붉은 망토', '푸른 망토', '보라 망토', '무지개 망토'],
+    boots: ['헝겊 신발', '붉은 운동화', '가죽 부츠', '날개 신발', '황금 부츠'],
+    scarf: ['털 목도리', '붉은 목도리', '푸른 목도리', '별무늬 목도리', '무지개 목도리'],
+    shield: ['나무 방패', '쇠 방패', '푸른 방패', '가시 방패', '황금 방패'],
+    wings: ['작은 날개', '흰 날개', '푸른 날개', '박쥐 날개', '천사 날개']
   };
   var PITY_AT = 25;
   var WEIGHTS = [60, 28, 9, 2.5, 0.5], WEIGHTS_BOSS = [38, 36, 18, 6, 2];
-  var PLACE = { hat: 'translate(190 62) rotate(8) scale(1.5)', weapon: 'translate(44 222) rotate(-28)', glasses: '', cape: '' };
-  var VB = { hat: '-70 -90 140 105', glasses: '95 118 160 70', weapon: '-45 -125 90 145', cape: '205 95 150 235' };
+  var PLACE = { hat: 'translate(190 62) rotate(8) scale(1.5)', weapon: 'translate(44 222) rotate(-28)', glasses: '', cape: '', boots: '', scarf: '', shield: 'translate(266 238) rotate(8)', wings: '' };
+  var VB = { hat: '-70 -90 140 105', glasses: '95 118 160 70', weapon: '-45 -125 90 145', cape: '205 95 150 235', boots: '105 285 170 55', scarf: '135 60 140 90', shield: '-40 -48 80 96', wings: '-45 40 150 140' };
   function starPts(cx, cy, ro, ri) { var pts = []; for (var k = 0; k < 10; k++) { var r = k % 2 ? ri : ro, a = -Math.PI / 2 + k * Math.PI / 5; pts.push((cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1)); } return pts.join(' '); }
   var BR = '#6a3d1b';
   var ART = {
@@ -133,6 +141,49 @@
       return out;
     })()
   };
+
+  (function () {
+    function shoe(tx, ty, fill, stroke, tall, extra) {
+      return '<g transform="translate(' + tx + ' ' + ty + ')"><path d="M-24 4V' + (tall ? -30 : -6) + (tall ? 'H-12V-34H14V-14Q28-12 26 4Z' : 'Q-24-20-8-20H8Q26-18 26-4V4Z') + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="4" stroke-linejoin="round"/><rect x="-27" y="1" width="56" height="10" rx="5" fill="#fff" stroke="' + stroke + '" stroke-width="3"/>' + (extra || '') + '</g>';
+    }
+    function pair(fill, stroke, tall, extra) { return shoe(138, 318, fill, stroke, tall, extra) + shoe(228, 324, fill, stroke, tall, extra); }
+    var wing = '<path d="M-26 6Q-52-18-44 10-36 0-28 8Z" fill="#fff" stroke="#3b4752" stroke-width="3" stroke-linejoin="round"/>';
+    ART.boots = [
+      pair('#d8d2c0', '#6a6450', false),
+      pair('#e0503b', '#7a1d12', false, '<path d="M-10-14l14 0M-12-8l16 0" stroke="#fff" stroke-width="3" stroke-linecap="round"/>'),
+      pair('#8a5a2b', '#4a2b12', true, '<rect x="-14" y="-36" width="30" height="7" rx="3" fill="#6a3d1b" stroke="#4a2b12" stroke-width="3"/>'),
+      pair('#7fb8ff', '#17407a', false, wing),
+      pair('#ffcf2e', '#6a3d1b', true, '<polygon points="' + starPts(0, -50, 8, 3.5) + '" fill="#fff7c2" stroke="#6a3d1b" stroke-width="2"/>')
+    ];
+    function scarf(c, d, extra) {
+      return '<path d="M236 94L264 134 244 142 226 104Z" fill="' + c + '" stroke="' + d + '" stroke-width="4" stroke-linejoin="round"/><path d="M146 76Q196 102 254 80L258 100Q198 126 142 98Z" fill="' + c + '" stroke="' + d + '" stroke-width="4" stroke-linejoin="round"/>' + (extra || '');
+    }
+    ART.scarf = [
+      scarf('#cfc8b4', '#8a8470', '<path d="M170 88l4 20M190 94l4 20M212 96l4 20M234 90l4 20" stroke="#8a8470" stroke-width="3"/>'),
+      scarf('#e0503b', '#7a1d12', '<path d="M248 138l-10 6M256 134l-10 6" stroke="#7a1d12" stroke-width="3"/>'),
+      scarf('#3b82e0', '#17407a', '<path d="M170 88l4 20M200 96l4 20M230 90l4 20" stroke="#fff" stroke-width="4" stroke-linecap="round"/>'),
+      scarf('#8a4bd8', '#3d1a70', '<polygon points="' + starPts(176, 100, 7, 3) + '" fill="#ffd23f"/><polygon points="' + starPts(214, 100, 7, 3) + '" fill="#ffd23f"/><polygon points="' + starPts(250, 120, 6, 2.6) + '" fill="#ffd23f"/>'),
+      '<defs><linearGradient id="sf@" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff5a5a"/><stop offset=".25" stop-color="#ffd23f"/><stop offset=".5" stop-color="#4fd16a"/><stop offset=".75" stop-color="#3b9be8"/><stop offset="1" stop-color="#b06bff"/></linearGradient></defs>' + scarf('url(#sf@)', '#6a3d1b')
+    ];
+    ART.shield = [
+      '<circle r="27" fill="#c58a4a" stroke="' + BR + '" stroke-width="4"/><path d="M-14-24V24M0-27V27M14-24V24" stroke="#8a5a2b" stroke-width="3"/><circle r="8" fill="#aab4c0" stroke="#3b4752" stroke-width="3"/>',
+      '<circle r="27" fill="#aab4c0" stroke="#3b4752" stroke-width="4"/><circle r="19" fill="none" stroke="#6f7c89" stroke-width="3"/><circle r="7" fill="#e6edf5" stroke="#3b4752" stroke-width="3"/><circle cx="0" cy="-22" r="2.4" fill="#3b4752"/><circle cx="0" cy="22" r="2.4" fill="#3b4752"/><circle cx="-22" cy="0" r="2.4" fill="#3b4752"/><circle cx="22" cy="0" r="2.4" fill="#3b4752"/>',
+      '<path d="M-26-28H26V4Q26 26 0 38-26 26-26 4Z" fill="#3b82e0" stroke="#17407a" stroke-width="4" stroke-linejoin="round"/><path d="M0-28V38M-26 -4H26" stroke="#fff" stroke-width="5"/>',
+      '<polygon points="' + starPts(0, 0, 33, 24).replace(/(\d)\s/g, '$1 ') + '" fill="#6b2d2d" stroke="#2b1a0c" stroke-width="4" stroke-linejoin="round"/><circle r="17" fill="#c64a4a" stroke="#2b1a0c" stroke-width="4"/><circle r="6" fill="#ffd23f" stroke="#2b1a0c" stroke-width="3"/>',
+      '<path d="M-27-30H27V4Q27 28 0 40-27 28-27 4Z" fill="#ffcf2e" stroke="' + BR + '" stroke-width="4" stroke-linejoin="round"/><path d="M-18-22H18V4Q18 20 0 30-18 20-18 4Z" fill="#f0a500" stroke="' + BR + '" stroke-width="3"/><circle cy="0" r="8" fill="#3aa0e0" stroke="' + BR + '" stroke-width="3"/><polygon points="' + starPts(0, -40, 8, 3.5) + '" fill="#fff7c2" stroke="' + BR + '" stroke-width="2"/>'
+    ];
+    function wingPath(sc, fill, stroke, lines) {
+      return '<g transform="translate(92 168) scale(' + sc + ') translate(-92 -168)"><path d="M92 168C48 160 4 110-18 54 8 62 30 66 46 78 34 94 52 104 62 118 54 134 74 148 92 168Z" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + (4 / sc).toFixed(1) + '" stroke-linejoin="round"/>' + (lines || '') + '</g>';
+    }
+    var feathers = '<path d="M30 80Q60 110 84 160M46 78Q70 108 62 118" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="3"/>';
+    ART.wings = [
+      wingPath(0.7, '#eceaf0', '#8d96a1', feathers),
+      wingPath(0.95, '#ffffff', '#8d96a1', feathers),
+      wingPath(1, '#8fc4ff', '#17407a', feathers),
+      wingPath(1, '#5b3bb8', '#2a1a5c', '<path d="M-6 66Q40 100 88 164M30 78Q56 104 58 120M-18 54Q10 96 60 120" fill="none" stroke="#2a1a5c" stroke-width="3"/>'),
+      wingPath(1.1, '#fff8c4', '#d99a00', feathers)
+    ];
+  })();
   var artUid = 0;
   function artOf(slot, tier) { return ART[slot][tier].replace(/@/g, 'u' + (++artUid)); }
   function iconSvg(it) { return '<svg viewBox="' + VB[it.s] + '" aria-hidden="true">' + artOf(it.s, it.r) + '</svg>'; }
@@ -230,7 +281,7 @@
   var state;
   function freshState() {
     var lv = {}; UPGRADES.forEach(function (u) { lv[u.id] = 0; });
-    return { bananas: 0, total: 0, run: 0, seeds: 0, resets: 0, chests: 10, pend: null, pity: 0, opened: 0, iid: 0, items: [], eq: { hat: 0, weapon: 0, glasses: 0, cape: 0 }, wave: 1, wk: 0, kills: 0, auto: true, bosses: {}, spent: 0, perks: {}, ach: {}, golds: 0, taps: 0, levels: lv, lastSeen: Date.now(), dailyLast: '', dailyStreak: 0 };
+    return { bananas: 0, total: 0, run: 0, seeds: 0, resets: 0, chests: 10, pend: null, pity: 0, opened: 0, iid: 0, items: [], eq: { hat: 0, weapon: 0, glasses: 0, cape: 0, boots: 0, scarf: 0, shield: 0, wings: 0 }, wave: 1, wk: 0, kills: 0, auto: true, bosses: {}, spent: 0, perks: {}, ach: {}, golds: 0, taps: 0, levels: lv, lastSeen: Date.now(), dailyLast: '', dailyStreak: 0 };
   }
   function num(v) { v = +v; return isFinite(v) && v > 0 ? v : 0; }
   function sanitize(s) {
@@ -293,7 +344,7 @@
     return s * stageMult() * seedMult() * (1 + 0.1 * perk('grow')) * (1 + eqVal('hat'));
   }
   function earn(x) { state.bananas += x; state.total += x; state.run += x; }
-  function prestigeGain() { return Math.floor(Math.pow(state.run / SEED_BASE, 1 / 3)); }
+  function prestigeGain() { return Math.floor(Math.pow(state.run / SEED_BASE, 1 / 3) * (1 + eqVal('wings'))); }
   var comboStamps = [];
   function comboOn() {
     var now = Date.now();
@@ -501,7 +552,7 @@
       elEvoPct.textContent = '신!';
       elEvoBar.style.width = '100%';
     }
-    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v18';
+    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v20';
   }
 
   /* ---------- 환생 (프레스티지) ---------- */
@@ -666,7 +717,7 @@
     var r = elStage.getBoundingClientRect(), m = q.el.querySelector('.mbody').getBoundingClientRect();
     pp = { x: m.left - r.left + m.width / 2, y: m.top - r.top + m.height * 0.25 };
     earn(drop); state.kills++; state.wk++;
-    if (Math.random() < 0.02) addChest(1);
+    if (Math.random() < 0.02 * (1 + eqVal('scarf'))) addChest(1);
     popAt(pp.x, pp.y, '+' + fmt(Math.max(drop, 1)), false);
     q.el.className = 'mon die s0';
     setTimeout(function () { if (q.el.parentNode) q.el.parentNode.removeChild(q.el); }, 320);
@@ -683,7 +734,7 @@
   function hitTarget(dmg, fromTap) {
     var pp;
     if (battle.on) {
-      battle.hp -= dmg; flash();
+      dmg *= (1 + eqVal('shield')); battle.hp -= dmg; flash();
       pp = monPos(); popAt(pp.x + (Math.random() - .5) * 30, pp.y, fmt(Math.max(1, dmg)), false);
       if (battle.hp <= 0) endFight(true);
     } else if (queue.length) {
@@ -754,9 +805,9 @@
   }
   function cellHtml(sl) {
     var it = itemById(state.eq[sl.id]);
-    if (!it) return '<div class="gcell big empty"><span class="sn">' + sl.name + '</span><span class="em">비어 있어요</span></div>';
+    if (!it) return '<div class="gcell big empty"><span class="sn">' + sl.name + '</span><span class="em">비어요</span></div>';
     return '<button type="button" class="gcell big" style="--rc:' + RAR[it.r].col + '" data-id="' + it.id + '" aria-label="' + sl.name + ' ' + itemName(it) + ' ' + RAR[it.r].name + '">' + iconSvg(it) +
-      '<span class="sn">' + sl.name + ' · ' + RAR[it.r].name + '</span><b class="nm">' + itemName(it) + '</b><span class="st">+' + Math.round(itemVal(it) * 100) + '%</span></button>';
+      '<span class="sn">' + sl.name + '</span><b class="nm">' + itemName(it) + '</b><span class="st">+' + Math.round(itemVal(it) * 100) + '%</span></button>';
   }
   function renderPane() {
     if (tab !== 'gear') return;
@@ -814,11 +865,11 @@
       var glow = it.r >= 3 ? ' style="filter:drop-shadow(0 0 6px ' + RAR[it.r].col + ')"' : '';
       return '<g' + glow + '><g transform="' + PLACE[slot] + '">' + artOf(slot, it.r) + '</g></g>';
     }
-    elGearUnder.innerHTML = layer('cape');
+    elGearUnder.innerHTML = layer('wings') + layer('cape');
     var hand = state.eq.weapon ? '' : '';
     var wp = layer('weapon');
     if (wp) wp += '<circle cx="44" cy="222" r="12" fill="#ffd23f" stroke="#6a3d1b" stroke-width="4"/>';
-    elGearOver.innerHTML = layer('glasses') + layer('hat') + wp;
+    elGearOver.innerHTML = layer('scarf') + layer('shield') + layer('boots') + layer('glasses') + layer('hat') + wp;
     elWrap.classList.toggle('has-hat', !!state.eq.hat);
   }
   function renderChestBtn() {
@@ -888,6 +939,9 @@
       return '<button type="button" class="ccard' + (glow ? ' glow' : '') + '" data-act="' + act + '" style="--rc:' + RAR[it.r].col + '">' +
         '<span class="cl">' + label + '</span><span class="ci">' + iconSvg(it) + '</span><b>' + itemName(it) + '</b><span class="cr">' + RAR[it.r].name + '</span><span class="cs">' + slotInfo(it.s).stat + ' +' + Math.round(itemVal(it) * 100) + '%</span></button>';
     }
+    function bare() {                               // 누르면 곧바로 흔들리는 상자만 보여 줘요 (버튼·글자 없음)
+      m.innerHTML = '<div class="card bare"><div class="chestbox big">' + chestSvg(false) + '</div></div>';
+    }
     function view(it, cur, msg) {                   // 결과 화면. 같은 종류가 있으면 두 장비를 비교해서 직접 골라요
       var col = RAR[it.r].col, pending = !!(state.pend && state.pend.id === it.id), q;
       if (pending && cur) {
@@ -907,7 +961,7 @@
         '<div class="btns"><button type="button" class="no">닫기</button>' + (state.chests > 0 ? '<button type="button" class="go again">한 번 더 (' + state.chests + ')</button>' : '<button type="button" class="gear">장비 보기</button>') + '</div></div>';
       if ((q = m.querySelector('.no'))) q.addEventListener('click', close);
       if ((q = m.querySelector('.gear'))) q.addEventListener('click', function () { close(); setTab('gear'); });
-      if ((q = m.querySelector('.again'))) q.addEventListener('click', function () { idle(); openIt(); });
+      if ((q = m.querySelector('.again'))) q.addEventListener('click', function () { bare(); openIt(); });
     }
     function openIt() {
       if (state.chests < 1) return;
@@ -919,7 +973,8 @@
       }, 550);
     }
     if (state.pend) view(state.pend, itemById(state.eq[state.pend.s]));      // 고르던 중 닫았으면 이어서 보여 줘요
-    else { idle(); if (state.chests > 0) openIt(); }                          // 한 번 눌러서 바로 열어요
+    else if (state.chests > 0) { bare(); openIt(); }
+    else idle();                          // 한 번 눌러서 바로 열어요
   }
   elSideChest.addEventListener('click', function () { if (state.chests > 0 || state.pend) showChest(); });
   elMainChest.addEventListener('click', function () { if (state.chests > 0 || state.pend) showChest(); });
@@ -997,7 +1052,7 @@
     var now = Date.now(), away = now - state.lastSeen;
     if (away < 60000) { state.lastSeen = now; return; }
     var secs = Math.min(away, offCap() * 3600 * 1000) / 1000;
-    var gain = perSecond() * secs * offRate();
+    var gain = perSecond() * secs * offRate() * (1 + eqVal('boots'));
     state.lastSeen = now;
     if (gain < 1) return;
     showOffline(gain, away);

@@ -306,7 +306,7 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 .shop-bar .sp { flex: 1; }
 .tab { background: var(--panel); color: var(--muted); border: 2px solid var(--line); border-radius: 999px; padding: 5px 13px; font-family: var(--font-display); font-size: 15px; cursor: pointer; }
 .tab.on { background: var(--banana); color: var(--brown); border-color: var(--banana-deep); }
-.gearpane { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 10px; }
+.gearpane { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 8px; }
 .gp-left { min-height: 0; display: flex; flex-direction: column; gap: 6px; background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 8px; }
 .gp-slots { flex: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
 .gcell { position: relative; aspect-ratio: 1 / 1; min-width: 0; padding: 0; display: grid; place-items: center; background: var(--panel-2); border: 2px solid var(--rc, var(--line)); border-radius: 10px; cursor: pointer; color: var(--muted); font-size: 10.5px; }
@@ -316,7 +316,7 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 .gcell.slot.empty { background: var(--panel-2); }
 .gcell .tg { position: absolute; left: 2px; bottom: 1px; font-size: 9.5px; color: var(--brown); font-weight: 700; }
 .gcell.new::after { content: ''; position: absolute; right: 3px; top: 3px; width: 7px; height: 7px; border-radius: 50%; background: var(--bad); }
-.gp-grid { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 8px; overscroll-behavior: contain; }
+.gp-grid { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 5px; overscroll-behavior: contain; }
 .gp-foot { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12px; color: var(--muted); }
 .gp-foot .sellall { padding: 3px 8px; font-size: 11.5px; }
 .gp-right { min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; }
@@ -347,11 +347,13 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 .bigchest .cico svg { width: 100%; height: 100%; display: block; }
 .bigchest .cnt { position: absolute; z-index: 1; right: -4px; top: -6px; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 999px; background: var(--bad); color: #fff; border: 2px solid #fff; font-family: var(--font-display); font-size: 15px; line-height: 22px; text-align: center; }
 .gcell.big { aspect-ratio: auto; min-height: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 4px 3px; background: var(--panel-2); border-width: 3px; border-radius: 14px; color: var(--muted); text-align: center; }
-.gcell.big svg { width: 70%; height: 34px; flex: none; }
-.gcell.big .sn { font-size: 10.5px; color: var(--muted); }
-.gcell.big .nm { font-size: 12.5px; font-weight: 600; color: var(--rc, var(--ink)); overflow-wrap: anywhere; line-height: 1.2; }
-.gcell.big .st { font-size: 10.5px; color: var(--muted); }
-.gcell.big .em { font-size: 12px; }
+.gcell.big svg { width: 82%; height: 32px; flex: none; }
+.gcell.big .sn { font-size: 9.5px; color: var(--muted); }
+.gcell.big .nm { font-size: 10.5px; font-weight: 600; color: var(--rc, var(--ink)); overflow-wrap: anywhere; line-height: 1.2; }
+.gcell.big .st { font-size: 10px; color: var(--muted); }
+.gcell.big .em { font-size: 10.5px; }
+.modal .card.bare { background: transparent; border: 0; box-shadow: none; padding: 0; }
+.chestbox.big { width: min(72vw, 260px); margin: 0 auto; }
 .chestbox.sm { width: 90px; margin: 0 auto; }
 .cmpwrap { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
 .ccard { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; padding: 8px 6px 10px; background: var(--panel-2); color: var(--ink); border: 3px solid var(--line); border-radius: 16px; cursor: pointer; font: inherit; }
