@@ -102,68 +102,9 @@
   var PITY_AT = 25;
   var WEIGHTS = [60, 28, 9, 2.5, 0.5], WEIGHTS_BOSS = [38, 36, 18, 6, 2];
   var PLACE = { weapon: 'translate(44 222) rotate(-28)', glasses: '', cape: '', shield: 'translate(266 238) rotate(8)', wings: '', shot: '' };
-  var VB = { glasses: '95 118 160 70', weapon: '-45 -125 90 145', cape: '205 95 150 235', shield: '-40 -48 80 96', wings: '-45 40 150 140', shot: '0 0 64 64' };
-  function starPts(cx, cy, ro, ri) { var pts = []; for (var k = 0; k < 10; k++) { var r = k % 2 ? ri : ro, a = -Math.PI / 2 + k * Math.PI / 5; pts.push((cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1)); } return pts.join(' '); }
-  var BR = '#6a3d1b';
-  var ART = {
-    glasses: [
-      '<circle cx="142" cy="148" r="21" fill="rgba(190,225,255,.3)" stroke="#4a2b12" stroke-width="4"/><circle cx="207" cy="155" r="21" fill="rgba(190,225,255,.3)" stroke="#4a2b12" stroke-width="4"/><path d="M162 150Q175 142 187 153" fill="none" stroke="#4a2b12" stroke-width="4"/><path d="M121 146L100 140M228 157L250 160" stroke="#4a2b12" stroke-width="4" stroke-linecap="round"/>',
-      '<rect x="116" y="132" width="52" height="34" rx="13" fill="#1b1b24" stroke="#000" stroke-width="3"/><rect x="182" y="139" width="52" height="34" rx="13" fill="#1b1b24" stroke="#000" stroke-width="3"/><path d="M168 146L182 150" stroke="#000" stroke-width="5"/><path d="M124 140h14M190 147h14" stroke="rgba(255,255,255,.5)" stroke-width="3" stroke-linecap="round"/><path d="M116 142L100 138M234 150L250 154" stroke="#000" stroke-width="4" stroke-linecap="round"/>',
-      '<g transform="translate(142 146) scale(1.2)"><path d="M0 14C-30-6-18-30 0-14 18-30 30-6 0 14Z" fill="#ff6fa3" stroke="#7a1d44" stroke-width="3.5" stroke-linejoin="round"/></g><g transform="translate(207 153) scale(1.2)"><path d="M0 14C-30-6-18-30 0-14 18-30 30-6 0 14Z" fill="#ff6fa3" stroke="#7a1d44" stroke-width="3.5" stroke-linejoin="round"/></g><path d="M164 144Q175 138 186 148" fill="none" stroke="#7a1d44" stroke-width="4"/>',
-      '<path d="M96 142Q175 118 256 152" fill="none" stroke="#3b4752" stroke-width="12" stroke-linecap="round"/><circle cx="142" cy="148" r="25" fill="rgba(111,208,255,.55)" stroke="#3b4752" stroke-width="6"/><circle cx="207" cy="155" r="25" fill="rgba(111,208,255,.55)" stroke="#3b4752" stroke-width="6"/><path d="M128 138q8-8 18-6M193 145q8-8 18-6" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>',
-      '<polygon points="' + starPts(142, 148, 28, 13) + '" fill="#7a4bd8" stroke="#ffd23f" stroke-width="4" stroke-linejoin="round"/><polygon points="' + starPts(207, 155, 28, 13) + '" fill="#7a4bd8" stroke="#ffd23f" stroke-width="4" stroke-linejoin="round"/><path d="M168 150Q175 146 181 153" fill="none" stroke="#ffd23f" stroke-width="4"/><circle cx="136" cy="142" r="3" fill="#fff"/><circle cx="201" cy="149" r="3" fill="#fff"/>'
-    ],
-    weapon: [
-      '<rect x="-6" y="-96" width="12" height="104" rx="5" fill="#a8672f" stroke="' + BR + '" stroke-width="4"/>',
-      '<rect x="-5" y="-90" width="10" height="98" rx="4" fill="#a8672f" stroke="' + BR + '" stroke-width="4"/><path d="M5-92Q38-96 40-66 36-44 5-48Z" fill="#aab4c0" stroke="#3b4752" stroke-width="4" stroke-linejoin="round"/>',
-      '<rect x="-17" y="-14" width="34" height="8" rx="3" fill="#c9962a" stroke="' + BR + '" stroke-width="3"/><rect x="-5" y="-6" width="10" height="16" rx="3" fill="#7a4a22" stroke="' + BR + '" stroke-width="3"/><path d="M-8-14L-8-98 0-112 8-98 8-14Z" fill="#e6edf5" stroke="#3b4752" stroke-width="4" stroke-linejoin="round"/>',
-      '<rect x="-5" y="-96" width="10" height="106" rx="4" fill="#5b3bb8" stroke="#2a1a5c" stroke-width="4"/><circle cx="0" cy="-104" r="16" fill="#ffe66b" stroke="#c77700" stroke-width="4"/><path d="M4-117L-8-102H0L-4-90 9-107H1Z" fill="#fff" stroke="#c77700" stroke-width="2" stroke-linejoin="round"/>',
-      '<rect x="-17" y="-14" width="34" height="8" rx="3" fill="' + BR + '"/><rect x="-5" y="-6" width="10" height="16" rx="3" fill="' + BR + '"/><path d="M-9-14Q-28-62 4-118 4-70 9-14Z" fill="#ffd23f" stroke="' + BR + '" stroke-width="4" stroke-linejoin="round"/><path d="M-4-30Q-13-62 2-96" fill="none" stroke="#fff7c2" stroke-width="3" stroke-linecap="round"/>'
-    ],
-    cape: (function () {
-      var cols = [['#cfc8b4', '#8a8470'], ['#e0503b', '#7a1d12'], ['#3b82e0', '#17407a'], ['#8a4bd8', '#3d1a70']], out = [];
-      cols.forEach(function (c, i) {
-        out.push('<path d="M236 112Q330 120 342 230 346 300 292 322L216 300Z" fill="' + c[0] + '" stroke="' + c[1] + '" stroke-width="5" stroke-linejoin="round"/><path d="M244 124Q320 134 332 224" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="4" stroke-linecap="round"/>' +
-          (i >= 3 ? '<polygon points="' + starPts(300, 250, 9, 4) + '" fill="#ffd23f"/><polygon points="' + starPts(320, 190, 7, 3) + '" fill="#ffd23f"/>' : ''));
-      });
-      out.push('<defs><linearGradient id="rbw@" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5a5a"/><stop offset=".25" stop-color="#ffd23f"/><stop offset=".5" stop-color="#4fd16a"/><stop offset=".75" stop-color="#3b9be8"/><stop offset="1" stop-color="#b06bff"/></linearGradient></defs><path d="M236 112Q330 120 342 230 346 300 292 322L216 300Z" fill="url(#rbw@)" stroke="#6a3d1b" stroke-width="5" stroke-linejoin="round"/><path d="M244 124Q320 134 332 224" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="4" stroke-linecap="round"/>');
-      return out;
-    })()
-  };
-
-  (function () {
-    ART.shield = [
-      '<circle r="27" fill="#c58a4a" stroke="' + BR + '" stroke-width="4"/><path d="M-14-24V24M0-27V27M14-24V24" stroke="#8a5a2b" stroke-width="3"/><circle r="8" fill="#aab4c0" stroke="#3b4752" stroke-width="3"/>',
-      '<circle r="27" fill="#aab4c0" stroke="#3b4752" stroke-width="4"/><circle r="19" fill="none" stroke="#6f7c89" stroke-width="3"/><circle r="7" fill="#e6edf5" stroke="#3b4752" stroke-width="3"/><circle cx="0" cy="-22" r="2.4" fill="#3b4752"/><circle cx="0" cy="22" r="2.4" fill="#3b4752"/><circle cx="-22" cy="0" r="2.4" fill="#3b4752"/><circle cx="22" cy="0" r="2.4" fill="#3b4752"/>',
-      '<path d="M-26-28H26V4Q26 26 0 38-26 26-26 4Z" fill="#3b82e0" stroke="#17407a" stroke-width="4" stroke-linejoin="round"/><path d="M0-28V38M-26 -4H26" stroke="#fff" stroke-width="5"/>',
-      '<polygon points="' + starPts(0, 0, 33, 24).replace(/(\d)\s/g, '$1 ') + '" fill="#6b2d2d" stroke="#2b1a0c" stroke-width="4" stroke-linejoin="round"/><circle r="17" fill="#c64a4a" stroke="#2b1a0c" stroke-width="4"/><circle r="6" fill="#ffd23f" stroke="#2b1a0c" stroke-width="3"/>',
-      '<path d="M-27-30H27V4Q27 28 0 40-27 28-27 4Z" fill="#ffcf2e" stroke="' + BR + '" stroke-width="4" stroke-linejoin="round"/><path d="M-18-22H18V4Q18 20 0 30-18 20-18 4Z" fill="#f0a500" stroke="' + BR + '" stroke-width="3"/><circle cy="0" r="8" fill="#3aa0e0" stroke="' + BR + '" stroke-width="3"/><polygon points="' + starPts(0, -40, 8, 3.5) + '" fill="#fff7c2" stroke="' + BR + '" stroke-width="2"/>'
-    ];
-    function wingPath(sc, fill, stroke, lines) {
-      return '<g transform="translate(92 168) scale(' + sc + ') translate(-92 -168)"><path d="M92 168C48 160 4 110-18 54 8 62 30 66 46 78 34 94 52 104 62 118 54 134 74 148 92 168Z" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + (4 / sc).toFixed(1) + '" stroke-linejoin="round"/>' + (lines || '') + '</g>';
-    }
-    var feathers = '<path d="M30 80Q60 110 84 160M46 78Q70 108 62 118" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="3"/>';
-    ART.wings = [
-      wingPath(0.7, '#eceaf0', '#8d96a1', feathers),
-      wingPath(0.95, '#ffffff', '#8d96a1', feathers),
-      wingPath(1, '#8fc4ff', '#17407a', feathers),
-      wingPath(1, '#5b3bb8', '#2a1a5c', '<path d="M-6 66Q40 100 88 164M30 78Q56 104 58 120M-18 54Q10 96 60 120" fill="none" stroke="#2a1a5c" stroke-width="3"/>'),
-      wingPath(1.1, '#fff8c4', '#d99a00', feathers)
-    ];
-  })();
+  var VB = { glasses: '95 118 160 70', weapon: '-45 -125 90 145', cape: '205 95 150 235', shield: '-40 -48 80 96', wings: '-45 22 150 165', shot: '0 0 64 64' };
+  var ART = window.BANANA_ART;                      // 그림은 items.js 에 있어요
   var artUid = 0;
-  (function () {
-    var B = 'M9 18C6 42 26 58 54 47 58 45 57 41 52 41 34 45 21 36 21 20 21 14 11 13 9 18Z';
-    function ban(f, s) { return '<path d="' + B + '" fill="' + f + '" stroke="' + s + '" stroke-width="3.5" stroke-linejoin="round"/><path d="M12 14l-1-6h8l-1 6Z" fill="#6a3d1b" stroke="' + s + '" stroke-width="2" stroke-linejoin="round"/>'; }
-    var shine = '<path d="M13 24C14 38 24 48 40 48" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="3" stroke-linecap="round"/>';
-    ART.shot = [
-      '<circle cx="32" cy="32" r="20" fill="#ffe66b" stroke="#a9780e" stroke-width="4"/><circle cx="32" cy="32" r="9" fill="#fff3b0" stroke="#a9780e" stroke-width="2.5"/><circle cx="32" cy="32" r="2.5" fill="#6a3d1b"/><circle cx="26" cy="29" r="1.6" fill="#6a3d1b"/><circle cx="38" cy="29" r="1.6" fill="#6a3d1b"/><circle cx="32" cy="38" r="1.6" fill="#6a3d1b"/>',
-      ban('#ffd23f', '#6a3d1b') + shine + '<path d="M44 12l10 3M46 22l12 2M40 4l8 4" stroke="#8d96a1" stroke-width="3" stroke-linecap="round"/>',
-      '<path d="M46 40C38 34 36 26 40 18 44 22 50 22 50 14 58 22 62 34 54 42Z" fill="#ff7a1a" stroke="#b02a00" stroke-width="2.5" stroke-linejoin="round"/>' + ban('#ffd23f', '#b02a00') + shine + '<path d="M50 38C46 34 46 30 48 26 52 30 54 34 50 38Z" fill="#ffe66b"/>',
-      ban('#bfe6ff', '#2a6ba8') + shine + '<path d="M40 14l5-8 3 9zM50 24l9-3-6 8zM34 6l3-4 3 5z" fill="#e8f6ff" stroke="#2a6ba8" stroke-width="2" stroke-linejoin="round"/>',
-      ban('#5b3bb8', '#241552') + '<polygon points="' + starPts(15, 30, 4.5, 2) + '" fill="#ffe66b"/><polygon points="' + starPts(28, 46, 4, 1.8) + '" fill="#fff"/><polygon points="' + starPts(44, 45, 3.4, 1.5) + '" fill="#8fc4ff"/><circle cx="46" cy="14" r="3" fill="#ff6fa3"/><circle cx="56" cy="26" r="2" fill="#ffe66b"/>'
-    ];
-  })();
   function artOf(slot, tier) { return ART[slot][tier].replace(/@/g, 'u' + (++artUid)); }
   function iconSvg(it) { return '<svg viewBox="' + VB[it.s] + '" aria-hidden="true">' + artOf(it.s, it.r) + '</svg>'; }
   function chestSvg(open) {
@@ -535,7 +476,7 @@
       elEvoPct.textContent = '신!';
       elEvoBar.style.width = '100%';
     }
-    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v31';
+    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v32';
   }
 
   /* ---------- 환생 (프레스티지) ---------- */
