@@ -264,7 +264,7 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 .shot svg { width: 100%; height: 100%; animation: spin .3s linear infinite; }
 @keyframes shot { to { transform: translate(var(--dx), var(--dy)); } }
 @keyframes lunge { 0% { transform: translateX(0); } 35% { transform: translateX(-24%) rotate(-8deg); } 100% { transform: none; } }
-@media (prefers-reduced-motion: reduce) { .lunger.atk, .chestbox.shake, .rcard, .shot, .shot svg, .mon .mbody, .mon.in, .mon.hit .mbody, .faces.atk { animation: none; } .mon.die { animation: none; opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .bigchest, .lunger.atk, .chestbox.shake, .rcard, .shot, .shot svg, .mon .mbody, .mon.in, .mon.hit .mbody, .faces.atk { animation: none; } .mon.die { animation: none; opacity: 0; } }
 
 /* 보스전 */
 .battle { display: flex; align-items: center; gap: 10px; background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 8px 10px; }
@@ -311,6 +311,11 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 .modal .lrow.done { background: var(--banana); border-color: var(--banana-deep); }
 .modal .lrow.done span, .modal .lrow.done b { color: var(--brown); }
 
+.bigchest { position: absolute; z-index: 6; left: 8px; top: 50px; width: 108px; height: 96px; padding: 0; background: none; border: 0; cursor: pointer; animation: pulse 1.1s ease-in-out infinite; filter: drop-shadow(0 0 12px rgba(255, 210, 63, .95)); }
+.bigchest[hidden] { display: none; }
+.bigchest .cico { display: block; width: 100%; height: 100%; }
+.bigchest .cico svg { width: 100%; height: 100%; display: block; }
+.bigchest .cnt { position: absolute; z-index: 1; right: -4px; top: -6px; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 999px; background: var(--bad); color: #fff; border: 2px solid #fff; font-family: var(--font-display); font-size: 15px; line-height: 22px; text-align: center; }
 /* 보물상자 · 장비 */
 .mini.chest { background: var(--banana); color: var(--brown); border-color: var(--banana-deep); }
 .mini.chest.has { animation: pulse 1.1s ease-in-out infinite; }
@@ -379,6 +384,7 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
       <div class="evo-label"><span id="evoName">다음: 바나나</span><span id="evoPct">0%</span></div>
       <div class="bar"><i id="evoBar"></i></div>
     </div>
+    <button type="button" class="bigchest" id="bigChest" hidden aria-label="보물상자 열기"><span class="cnt" id="bigCnt">1</span><span class="cico" id="bigIco"></span></button>
     <div class="wavelbl" id="waveLbl">스테이지 1-1</div>
     <div class="mons" id="mons"></div>
     <div class="mon boss" id="mon" hidden><div class="mbar"><i id="monBar"></i></div><div class="mbody" id="monBody"></div></div>

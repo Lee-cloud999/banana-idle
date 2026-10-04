@@ -500,7 +500,7 @@
       elEvoPct.textContent = '신!';
       elEvoBar.style.width = '100%';
     }
-    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v11';
+    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v12';
   }
 
   /* ---------- 환생 (프레스티지) ---------- */
@@ -739,6 +739,9 @@
   /* ---------- 보물상자 · 장비창 ---------- */
   var elChestBtn = $('chestBtn'), elGearBtn = $('gearBtn'), elGearUnder = $('gearUnder'), elGearOver = $('gearOver');
   var gearKey = '';
+  var elBigChest = $('bigChest'), elBigCnt = $('bigCnt');
+  $('bigIco').innerHTML = chestSvg(false);
+  elBigChest.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
   function renderGear() {
     var key = SLOTS.map(function (x) { return x.id + ':' + state.eq[x.id]; }).join('|') + (state.items.length ? '' : '-');
     var ids = SLOTS.map(function (x) { var it = itemById(state.eq[x.id]); return it ? it.s + it.r : ''; }).join('|');
@@ -759,6 +762,7 @@
   function renderChestBtn() {
     elChestBtn.textContent = '상자 ' + state.chests;
     elChestBtn.classList.toggle('has', state.chests > 0);
+    elBigChest.hidden = state.chests < 1; elBigCnt.textContent = state.chests;
   }
   function addChest(n) {
     state.chests += n;
@@ -823,6 +827,7 @@
     }
     function idleThenOpen() { idle(); openIt(); }
     idle();
+    if (state.chests > 0) openIt();             // 한 번 눌러서 바로 열어요
   }
   function showGear() {
     var old = document.querySelector('.modal.gearm'); if (old && old.parentNode) old.parentNode.removeChild(old);
@@ -875,6 +880,7 @@
     paint();
   }
   elChestBtn.addEventListener('click', showChest);
+  elBigChest.addEventListener('click', showChest);
   elGearBtn.addEventListener('click', showGear);
 
   /* ---------- 업적 · 씨앗 상점 ---------- */
