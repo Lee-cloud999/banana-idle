@@ -153,6 +153,15 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 .item.ready { border-color: var(--banana-deep); }
 
 .foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 2px 2px 0; color: var(--muted); font-size: 12.5px; }
+.gearedit { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: var(--card, #fffdf5); border-top: 2px solid var(--line); padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -6px 20px rgba(0,0,0,.18); display: flex; flex-direction: column; gap: 8px; max-width: 560px; margin: 0 auto; }
+.gearedit[hidden] { display: none; }
+.ge-tabs, .ge-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.gearedit button { flex: 1; min-width: 48px; border: 1.5px solid var(--line); background: #fff; border-radius: 10px; padding: 9px 6px; font-size: 14px; cursor: pointer; touch-action: manipulation; }
+.gearedit button.on { background: #ffd23f; border-color: #c77700; font-weight: 700; }
+.gearedit button.done { background: #3fae57; color: #fff; border-color: #2c7a3d; font-weight: 700; }
+.ge-info { font-size: 12.5px; color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
+.ge-hint { font-size: 12px; color: var(--muted); text-align: center; }
+body.gear-editing .char-btn { touch-action: none; outline: 2px dashed #2a8cff; outline-offset: 4px; }
 .reset { background: none; border: 1.5px solid var(--line); border-radius: 999px; padding: 4px 12px; color: var(--muted); cursor: pointer; font-size: 12.5px; }
 .reset.arm { border-color: var(--bad); color: var(--bad); }
 
@@ -504,8 +513,23 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
   </div>
   <footer class="foot">
     <span id="stats">자동으로 저장돼요</span>
+    <button class="reset" id="gearEditBtn" type="button">장비 위치 조정</button>
     <button class="reset" id="reset" type="button">처음부터 다시</button>
   </footer>
+</div>
+
+<div class="gearedit" id="gearEdit" hidden>
+  <div class="ge-tabs" id="geTabs"></div>
+  <div class="ge-info" id="geInfo"></div>
+  <div class="ge-row">
+    <button type="button" data-ge="rl">⟲ 5°</button><button type="button" data-ge="rr">5° ⟳</button>
+    <button type="button" data-ge="sm">크기 −</button><button type="button" data-ge="sp">크기 +</button>
+  </div>
+  <div class="ge-row">
+    <button type="button" data-ge="nl">◀</button><button type="button" data-ge="nu">▲</button><button type="button" data-ge="nd">▼</button><button type="button" data-ge="nr">▶</button>
+    <button type="button" data-ge="rs">초기화</button><button type="button" id="geDone" class="done">완료</button>
+  </div>
+  <div class="ge-hint">바나나 쪽을 손가락으로 끌면 선택한 장비가 따라와요</div>
 </div>
 
 <!-- 아이콘 모음 -->

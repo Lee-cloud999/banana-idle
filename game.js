@@ -414,7 +414,7 @@
     checkEvolution(); render();
   }
   var charBtn = $('charBtn');
-  charBtn.addEventListener('pointerdown', function (e) { e.preventDefault(); doTap(e.clientX, e.clientY); });
+  charBtn.addEventListener('pointerdown', function (e) { e.preventDefault(); if (window.__gearEdit) return; doTap(e.clientX, e.clientY); });
   charBtn.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doTap(); } });
   charBtn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
 
@@ -521,7 +521,7 @@
       elEvoPct.textContent = '신!';
       elEvoBar.style.width = '100%';
     }
-    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v21';
+    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v22';
   }
 
   /* ---------- 환생 (프레스티지) ---------- */
@@ -837,15 +837,82 @@
     gearKey = ids;
     function layer(slot) {
       var it = itemById(state.eq[slot]); if (!it) return '';
-      var glow = it.r >= 3 ? ' style="filter:drop-shadow(0 0 6px ' + RAR[it.r].col + ')"' : '';
-      return '<g' + glow + '><g transform="' + PLACE[slot] + '">' + artOf(slot, it.r) + '</g></g>';
+      var a = adjOf(slot), p = PIVOT[slot];
+      var sel = editSlot === slot ? 'filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 5px #2a8cff)' : (it.r >= 3 ? 'filter:drop-shadow(0 0 6px ' + RAR[it.r].col + ')' : '');
+      var tf = 'translate(' + (p[0] + a.x) + ' ' + (p[1] + a.y) + ') rotate(' + a.r + ') scale(' + a.s + ') translate(' + (-p[0]) + ' ' + (-p[1]) + ')';
+      var hand = slot === 'weapon' ? '<circle cx="44" cy="222" r="12" fill="#ffd23f" stroke="#6a3d1b" stroke-width="4"/>' : '';
+      return '<g transform="' + tf + '"' + (sel ? ' style="' + sel + '"' : '') + '><g transform="' + PLACE[slot] + '">' + artOf(slot, it.r) + '</g>' + hand + '</g>';
     }
     elGearUnder.innerHTML = layer('wings') + layer('cape');
-    var hand = state.eq.weapon ? '' : '';
-    var wp = layer('weapon');
-    if (wp) wp += '<circle cx="44" cy="222" r="12" fill="#ffd23f" stroke="#6a3d1b" stroke-width="4"/>';
-    elGearOver.innerHTML = layer('shield') + layer('glasses') + wp;
+    elGearOver.innerHTML = layer('shield') + layer('glasses') + layer('weapon');
   }
+  /* ===== 위치 조정 모드 ===== */
+  var PIVOT = { weapon: [44, 222], shield: [266, 238], glasses: [175, 153], cape: [280, 212], wings: [30, 110] };
+  var ADJ_KEY = 'banana-gear-adj-v1', adj = {}, editSlot = null;
+  try { adj = JSON.parse(localStorage.getItem(ADJ_KEY) || '{}') || {}; } catch (e) { adj = {}; }
+  function adjOf(slot) { var a = adj[slot] || {}; return { x: +a.x || 0, y: +a.y || 0, r: +a.r || 0, s: +a.s || 1 }; }
+  function saveAdj() { try { localStorage.setItem(ADJ_KEY, JSON.stringify(adj)); } catch (e) {} }
+  function changeAdj(f) {
+    if (!editSlot) return;
+    var a = adjOf(editSlot); f(a);
+    a.s = Math.max(0.3, Math.min(3, Math.round(a.s * 100) / 100));
+    a.r = ((Math.round(a.r) % 360) + 540) % 360 - 180;
+    a.x = Math.round(a.x * 10) / 10; a.y = Math.round(a.y * 10) / 10;
+    adj[editSlot] = a; saveAdj(); gearKey = ''; renderGear(); editInfo();
+  }
+  var elEdit = $('gearEdit'), elEditInfo = $('geInfo'), elEditTabs = $('geTabs');
+  function editInfo() {
+    if (!editSlot) { elEditInfo.textContent = '장비를 먼저 껴 주세요'; return; }
+    var a = adjOf(editSlot);
+    elEditInfo.textContent = editSlot + ': x ' + a.x + ', y ' + a.y + ', 각도 ' + a.r + '°, 크기 ×' + a.s;
+  }
+  function editTabs() {
+    var html = '';
+    SLOTS.forEach(function (x) {
+      if (!state.eq[x.id]) return;
+      html += '<button type="button" data-slot="' + x.id + '" class="' + (editSlot === x.id ? 'on' : '') + '">' + x.name + '</button>';
+    });
+    elEditTabs.innerHTML = html || '<span>낀 장비가 없어요</span>';
+  }
+  function openEdit(on) {
+    window.__gearEdit = on; elEdit.hidden = !on; document.body.classList.toggle('gear-editing', on);
+    if (on) {
+      if (!editSlot || !state.eq[editSlot]) { editSlot = null; SLOTS.some(function (x) { if (state.eq[x.id]) { editSlot = x.id; return true; } }); }
+      editTabs(); editInfo();
+    } else editSlot = null;
+    gearKey = ''; renderGear();
+  }
+  $('gearEditBtn').addEventListener('click', function () { openEdit(true); });
+  $('geDone').addEventListener('click', function () { openEdit(false); });
+  elEditTabs.addEventListener('click', function (e) { var b = e.target.closest('button[data-slot]'); if (!b) return; editSlot = b.getAttribute('data-slot'); editTabs(); editInfo(); gearKey = ''; renderGear(); });
+  elEdit.addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-ge]'); if (!b) return;
+    var k = b.getAttribute('data-ge');
+    if (k === 'rl') changeAdj(function (a) { a.r -= 5; });
+    else if (k === 'rr') changeAdj(function (a) { a.r += 5; });
+    else if (k === 'sm') changeAdj(function (a) { a.s -= 0.05; });
+    else if (k === 'sp') changeAdj(function (a) { a.s += 0.05; });
+    else if (k === 'nl') changeAdj(function (a) { a.x -= 1; });
+    else if (k === 'nr') changeAdj(function (a) { a.x += 1; });
+    else if (k === 'nu') changeAdj(function (a) { a.y -= 1; });
+    else if (k === 'nd') changeAdj(function (a) { a.y += 1; });
+    else if (k === 'rs') changeAdj(function (a) { a.x = 0; a.y = 0; a.r = 0; a.s = 1; });
+  });
+  var dragging = null;
+  charBtn.addEventListener('pointerdown', function (e) {
+    if (!window.__gearEdit || !editSlot) return;
+    dragging = { x: e.clientX, y: e.clientY, a: adjOf(editSlot) };
+    try { charBtn.setPointerCapture(e.pointerId); } catch (x) {}
+  });
+  charBtn.addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    var w = elGearOver.getBoundingClientRect().width || 360, k = 360 / w;
+    var nx = dragging.a.x + (e.clientX - dragging.x) * k, ny = dragging.a.y + (e.clientY - dragging.y) * k;
+    changeAdj(function (a) { a.x = nx; a.y = ny; });
+  });
+  function endDrag() { dragging = null; }
+  charBtn.addEventListener('pointerup', endDrag);
+  charBtn.addEventListener('pointercancel', endDrag);
   function renderChestBtn() {
     elSideCnt.textContent = state.chests; elSideChest.classList.toggle('none', state.chests < 1);
     elSideMsg.textContent = state.chests > 0 ? '눌러서 열기' : '상자 없음';
