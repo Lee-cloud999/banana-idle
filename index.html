@@ -88,8 +88,8 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .bar { background: rgba(0,0,0,.25); } }
 .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--banana), var(--banana-deep)); border-radius: 999px; transition: width .25s ease; }
 
-.char-btn { position: relative; z-index: 2; flex: 1; min-height: 0; width: 100%; background: none; border: 0; padding: 0 0 6px; cursor: pointer; display: flex; align-items: flex-end; justify-content: center; }
-.char-wrap { position: relative; width: min(66%, 270px); padding-top: 13%; transform: scale(var(--sc, 1)); transform-origin: 50% 100%; transition: transform .6s cubic-bezier(.3,1.6,.5,1); }
+.char-btn { position: relative; z-index: 2; flex: 1; min-height: 0; width: 100%; background: none; border: 0; padding: 0 0 6px 5%; cursor: pointer; display: flex; align-items: flex-end; justify-content: flex-start; }
+.char-wrap { position: relative; width: min(50%, 220px); padding-top: 13%; transform: scale(var(--sc, 1)); transform-origin: 50% 100%; transition: transform .6s cubic-bezier(.3,1.6,.5,1); }
 .char-bob { animation: bob 2.6s ease-in-out infinite; transform-origin: 50% 100%; }
 .char-bob.sleeping { animation-duration: 4.2s; }
 .char-squash { transform-origin: 50% 100%; position: relative; }
@@ -112,7 +112,7 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 .sparkles i:nth-child(3) { left: 78%; top: 72%; animation-delay: 1.3s; }
 .sparkles i:nth-child(4) { left: 18%; top: 78%; animation-delay: 1.8s; width: 8px; height: 8px; }
 
-.bubble { position: absolute; z-index: 4; left: 50%; top: 58px; transform: translateX(-50%) scale(.9); max-width: 86%; background: var(--panel); color: var(--ink); border: 2px solid var(--line); border-radius: 16px; padding: 6px 12px; font-size: 14px; text-align: center; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; box-shadow: 0 3px 0 var(--shadow); }
+.bubble { position: absolute; z-index: 4; left: 32%; top: 58px; transform: translateX(-50%) scale(.9); max-width: 86%; background: var(--panel); color: var(--ink); border: 2px solid var(--line); border-radius: 16px; padding: 6px 12px; font-size: 14px; text-align: center; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; box-shadow: 0 3px 0 var(--shadow); }
 .bubble.show { opacity: 1; transform: translateX(-50%) scale(1); }
 
 .fx { position: absolute; inset: 0; z-index: 5; pointer-events: none; overflow: hidden; }
@@ -122,7 +122,7 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 .gold svg { width: 100%; height: 100%; animation: spin 1.6s ease-in-out infinite; }
 .banner { position: absolute; z-index: 7; left: 50%; top: 44%; transform: translate(-50%, -50%) scale(.6); background: var(--banana); color: var(--brown); border: 3px solid var(--brown); border-radius: 18px; padding: 10px 18px; font-family: var(--font-display); font-size: 20px; text-align: center; opacity: 0; pointer-events: none; max-width: 90%; box-shadow: 0 5px 0 var(--brown); }
 .banner.show { animation: banner 2.6s ease forwards; }
-.combo { position: absolute; z-index: 3; right: 12px; bottom: 12px; background: var(--brown); color: #fff; border-radius: 999px; padding: 4px 12px; font-family: var(--font-display); font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.combo { position: absolute; z-index: 3; left: 12px; bottom: 12px; background: var(--brown); color: #fff; border-radius: 999px; padding: 4px 12px; font-family: var(--font-display); font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
 .combo.show { opacity: 1; }
 
 /* 업그레이드 */
@@ -221,6 +221,26 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 .modal .day.done { opacity: .5; }
 .modal .hint { font-size: 12.5px; }
 
+/* 들판 몬스터 */
+.wavelbl { position: absolute; z-index: 2; right: 12px; top: 52px; background: rgba(0,0,0,.35); color: #fff; border-radius: 999px; padding: 2px 10px; font-family: var(--font-display); font-size: 13px; pointer-events: none; }
+.mon { position: absolute; z-index: 3; right: 5%; bottom: 10px; width: min(32%, 140px); pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.mon[hidden] { display: none; }
+.mon.boss { width: min(42%, 190px); }
+.mon .mbar { width: 80%; height: 8px; border-radius: 999px; background: rgba(0,0,0,.3); border: 1.5px solid rgba(0,0,0,.45); overflow: hidden; }
+.mon .mbar i { display: block; height: 100%; width: 100%; background: var(--bad); transition: width .12s linear; }
+.mon .mbody { width: 100%; animation: monbob 1.3s ease-in-out infinite; transform-origin: 50% 100%; }
+.mon .mbody svg { width: 100%; display: block; filter: drop-shadow(0 3px 0 rgba(0,0,0,.18)); }
+.mon.in { animation: monin .25s ease-out; }
+.mon.die { animation: mondie .3s ease-in forwards; }
+.mon.hit .mbody { animation: monhit .14s linear, monbob 1.3s ease-in-out infinite; }
+.faces.atk { animation: lunge .26s ease-out; }
+@keyframes monbob { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.04, .94); } }
+@keyframes monin { from { transform: translateX(40px) scale(.7); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes mondie { to { transform: scale(.4) translateY(10px); opacity: 0; } }
+@keyframes monhit { 0% { filter: brightness(2.2); transform: translateX(6px); } 100% { filter: none; transform: none; } }
+@keyframes lunge { 0% { transform: translateX(0); } 35% { transform: translateX(16%) rotate(5deg); } 100% { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .mon .mbody, .mon.in, .mon.hit .mbody, .faces.atk { animation: none; } .mon.die { animation: none; opacity: 0; } }
+
 /* 보스전 */
 .battle { display: flex; align-items: center; gap: 10px; background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 8px 10px; }
 .battle[hidden] { display: none; }
@@ -302,6 +322,8 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
       <div class="evo-label"><span id="evoName">다음: 바나나</span><span id="evoPct">0%</span></div>
       <div class="bar"><i id="evoBar"></i></div>
     </div>
+    <div class="wavelbl" id="waveLbl">스테이지 1-1</div>
+    <div class="mon in" id="mon" hidden><div class="mbar"><i id="monBar"></i></div><div class="mbody" id="monBody"></div></div>
     <div class="bubble" id="bubble"></div>
     <button class="char-btn" id="charBtn" aria-label="바나나를 눌러 수확하기">
       <div class="char-wrap stage-0" id="charWrap">
