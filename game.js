@@ -97,7 +97,7 @@
   };
   var INV_MAX = 40, PITY_AT = 25;
   var WEIGHTS = [60, 28, 9, 2.5, 0.5], WEIGHTS_BOSS = [38, 36, 18, 6, 2];
-  var PLACE = { hat: 'translate(190 46) rotate(8) scale(1.5)', weapon: 'translate(44 222) rotate(-28)', glasses: '', cape: '' };
+  var PLACE = { hat: 'translate(190 62) rotate(8) scale(1.5)', weapon: 'translate(44 222) rotate(-28)', glasses: '', cape: '' };
   var VB = { hat: '-70 -90 140 105', glasses: '95 118 160 70', weapon: '-45 -125 90 145', cape: '205 95 150 235' };
   function starPts(cx, cy, ro, ri) { var pts = []; for (var k = 0; k < 10; k++) { var r = k % 2 ? ri : ro, a = -Math.PI / 2 + k * Math.PI / 5; pts.push((cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1)); } return pts.join(' '); }
   var BR = '#6a3d1b';
@@ -500,7 +500,7 @@
       elEvoPct.textContent = '신!';
       elEvoBar.style.width = '100%';
     }
-    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v13';
+    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v14';
   }
 
   /* ---------- 환생 (프레스티지) ---------- */
