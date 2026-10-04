@@ -521,7 +521,7 @@
       elEvoPct.textContent = '신!';
       elEvoBar.style.width = '100%';
     }
-    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v22';
+    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v23';
   }
 
   /* ---------- 환생 (프레스티지) ---------- */
@@ -647,12 +647,13 @@
   function shoot() {
     var body = frontBody(); if (!body) return;
     var r = elStage.getBoundingClientRect(), f = elFaceWrap.getBoundingClientRect(), m = body.getBoundingClientRect();
-    var sx = f.left - r.left + f.width * 0.2, sy = f.top - r.top + f.height * 0.55;
+    var sa = adjOf('shot'), sx = f.left - r.left + (72 + sa.x) / 360 * f.width, sy = f.top - r.top + (184.25 + sa.y) / 335 * f.height;
     var ex = m.left - r.left + m.width * 0.65, ey = m.top - r.top + m.height * 0.55;
     var b = document.createElement('div');
     b.className = 'shot'; b.style.left = sx + 'px'; b.style.top = sy + 'px';
     b.style.setProperty('--dx', (ex - sx) + 'px'); b.style.setProperty('--dy', (ey - sy) + 'px');
-    b.innerHTML = '<svg viewBox="0 0 64 64"><use href="#i-banana"/></svg>';
+    b.style.width = b.style.height = (26 * sa.s) + 'px'; b.style.margin = (-13 * sa.s) + 'px 0 0 ' + (-13 * sa.s) + 'px';
+    b.innerHTML = '<svg viewBox="0 0 64 64"' + (sa.spin ? '' : ' style="animation:none;transform:rotate(' + sa.r + 'deg)"') + '><use href="#i-banana"/></svg>';
     elFx.appendChild(b);
     setTimeout(function () { if (b.parentNode) b.parentNode.removeChild(b); }, 330);
   }
@@ -844,17 +845,22 @@
       return '<g transform="' + tf + '"' + (sel ? ' style="' + sel + '"' : '') + '><g transform="' + PLACE[slot] + '">' + artOf(slot, it.r) + '</g>' + hand + '</g>';
     }
     elGearUnder.innerHTML = layer('wings') + layer('cape');
-    elGearOver.innerHTML = layer('shield') + layer('glasses') + layer('weapon');
+    var ghost = '';
+    if (editSlot === 'shot') {
+      var sa = adjOf('shot'), fw = elGearOver.getBoundingClientRect().width || 112, u = 26 * sa.s * 360 / fw / 64;
+      ghost = '<g transform="translate(' + (72 + sa.x) + ' ' + (184.25 + sa.y) + ') rotate(' + (sa.spin ? 0 : sa.r) + ') scale(' + u + ') translate(-32 -32)" style="filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 5px #2a8cff)"><use href="#i-banana" width="64" height="64"/></g>';
+    }
+    elGearOver.innerHTML = layer('shield') + layer('glasses') + layer('weapon') + ghost;
   }
   /* ===== 위치 조정 모드 ===== */
   var PIVOT = { weapon: [44, 222], shield: [266, 238], glasses: [175, 153], cape: [280, 212], wings: [30, 110] };
   var ADJ_KEY = 'banana-gear-adj-v1', adj = {}, editSlot = null;
   try { adj = JSON.parse(localStorage.getItem(ADJ_KEY) || '{}') || {}; } catch (e) { adj = {}; }
-  function adjOf(slot) { var a = adj[slot] || {}; return { x: +a.x || 0, y: +a.y || 0, r: +a.r || 0, s: +a.s || 1 }; }
+  function adjOf(slot) { var a = adj[slot] || {}; return { x: +a.x || 0, y: +a.y || 0, r: +a.r || 0, s: +a.s || 1, spin: a.spin === 0 ? 0 : 1 }; }
   function saveAdj() { try { localStorage.setItem(ADJ_KEY, JSON.stringify(adj)); } catch (e) {} }
   function changeAdj(f) {
     if (!editSlot) return;
-    var a = adjOf(editSlot); f(a);
+    var a = adjOf(editSlot); f(a); if (editSlot !== 'shot') delete a.spin;
     a.s = Math.max(0.3, Math.min(3, Math.round(a.s * 100) / 100));
     a.r = ((Math.round(a.r) % 360) + 540) % 360 - 180;
     a.x = Math.round(a.x * 10) / 10; a.y = Math.round(a.y * 10) / 10;
@@ -864,7 +870,9 @@
   function editInfo() {
     if (!editSlot) { elEditInfo.textContent = '장비를 먼저 껴 주세요'; return; }
     var a = adjOf(editSlot);
-    elEditInfo.textContent = editSlot + ': x ' + a.x + ', y ' + a.y + ', 각도 ' + a.r + '°, 크기 ×' + a.s;
+    $('geSpin').hidden = editSlot !== 'shot';
+    $('geSpin').textContent = a.spin ? '빙글빙글 ON' : '빙글빙글 OFF';
+    elEditInfo.textContent = (editSlot === 'shot' ? '던지는 바나나' : editSlot) + ': x ' + a.x + ', y ' + a.y + ', 각도 ' + a.r + '°, 크기 ×' + a.s + (editSlot === 'shot' ? (a.spin ? ' (돌면서 날아감)' : ' (각도 고정)') : '');
   }
   function editTabs() {
     var html = '';
@@ -872,12 +880,14 @@
       if (!state.eq[x.id]) return;
       html += '<button type="button" data-slot="' + x.id + '" class="' + (editSlot === x.id ? 'on' : '') + '">' + x.name + '</button>';
     });
-    elEditTabs.innerHTML = html || '<span>낀 장비가 없어요</span>';
+    html += '<button type="button" data-slot="shot" class="' + (editSlot === 'shot' ? 'on' : '') + '">던지는 바나나</button>';
+    elEditTabs.innerHTML = html;
   }
   function openEdit(on) {
     window.__gearEdit = on; elEdit.hidden = !on; document.body.classList.toggle('gear-editing', on);
     if (on) {
-      if (!editSlot || !state.eq[editSlot]) { editSlot = null; SLOTS.some(function (x) { if (state.eq[x.id]) { editSlot = x.id; return true; } }); }
+      if (!editSlot || (editSlot !== 'shot' && !state.eq[editSlot])) { editSlot = null; SLOTS.some(function (x) { if (state.eq[x.id]) { editSlot = x.id; return true; } }); }
+      if (!editSlot) editSlot = 'shot';
       editTabs(); editInfo();
     } else editSlot = null;
     gearKey = ''; renderGear();
@@ -896,7 +906,8 @@
     else if (k === 'nr') changeAdj(function (a) { a.x += 1; });
     else if (k === 'nu') changeAdj(function (a) { a.y -= 1; });
     else if (k === 'nd') changeAdj(function (a) { a.y += 1; });
-    else if (k === 'rs') changeAdj(function (a) { a.x = 0; a.y = 0; a.r = 0; a.s = 1; });
+    else if (k === 'rs') changeAdj(function (a) { a.x = 0; a.y = 0; a.r = 0; a.s = 1; a.spin = 1; });
+    else if (k === 'sw') changeAdj(function (a) { a.spin = a.spin ? 0 : 1; });
   });
   var dragging = null;
   charBtn.addEventListener('pointerdown', function (e) {
