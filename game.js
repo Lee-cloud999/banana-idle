@@ -35,11 +35,68 @@
     dance: ['신난다! 콤보 폭발!', '같이 춤춰요~']
   };
 
+  /* ---------- 소리 (파일 없이 WebAudio로 만들어요) ---------- */
+  var Snd = (function () {
+    var KEY = 'banana-ssuk-sound', ctx = null, master = null, on = true, lastTap = 0;
+    try { on = localStorage.getItem(KEY) !== '0'; } catch (e) {}
+    function ensure() {
+      if (!on) return null;
+      if (!ctx) {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        try { ctx = new AC(); } catch (e) { return null; }
+        master = ctx.createGain(); master.gain.value = 0.45; master.connect(ctx.destination);
+      }
+      if (ctx.state === 'suspended') { try { var p = ctx.resume(); if (p && p.catch) p.catch(function () {}); } catch (e) {} }
+      return ctx;
+    }
+    function tone(freq, start, dur, o) {
+      o = o || {};
+      var t0 = ctx.currentTime + start, osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.type = o.type || 'sine';
+      osc.frequency.setValueAtTime(freq, t0);
+      if (o.to) osc.frequency.exponentialRampToValueAtTime(o.to, t0 + dur);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(o.vol == null ? 0.5 : o.vol, t0 + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(g); g.connect(master);
+      osc.start(t0); osc.stop(t0 + dur + 0.05);
+    }
+    var N = { C5: 523.25, E5: 659.25, G5: 783.99, A5: 880, C6: 1046.5, E6: 1318.5, G6: 1568, C7: 2093 };
+    var SOUNDS = {
+      tap: function (o) { var f = 440 + (o && o.combo ? 160 : 0) + Math.random() * 80; tone(f, 0, 0.09, { to: f * 1.6, vol: 0.42 }); },
+      buy: function () { tone(N.E5, 0, 0.12, { type: 'triangle' }); tone(N.A5, 0.08, 0.16, { type: 'triangle' }); },
+      deny: function () { tone(180, 0, 0.16, { type: 'square', to: 120, vol: 0.18 }); },
+      ping: function () { tone(N.E6, 0, 0.18, { vol: 0.22 }); tone(N.G6, 0.1, 0.2, { vol: 0.18 }); },
+      gold: function () { [N.C6, N.E6, N.G6, N.C7].forEach(function (f, i) { tone(f, i * 0.06, 0.22, { type: 'triangle', vol: 0.32 }); }); },
+      evolve: function () { [N.C5, N.E5, N.G5, N.C6].forEach(function (f, i) { tone(f, i * 0.12, 0.35, { type: 'triangle', vol: 0.4 }); }); tone(N.E6, 0.5, 0.7, { vol: 0.3 }); },
+      daily: function () { [N.G5, N.C6, N.E6, N.G6].forEach(function (f, i) { tone(f, i * 0.09, 0.25, { type: 'triangle', vol: 0.35 }); }); },
+      chime: function () { tone(N.A5, 0, 0.3, { vol: 0.3 }); tone(N.E6, 0.12, 0.4, { vol: 0.25 }); },
+      angry: function () { tone(150, 0, 0.18, { type: 'sawtooth', to: 110, vol: 0.14 }); },
+      cry: function () { tone(520, 0, 0.35, { to: 300, vol: 0.25 }); }
+    };
+    return {
+      isOn: function () { return on; },
+      play: function (name, o) {
+        if (!on || !SOUNDS[name]) return;
+        if (name === 'tap') { var n = Date.now(); if (n - lastTap < 45) return; lastTap = n; }
+        if (!ensure()) return;
+        try { SOUNDS[name](o); } catch (e) {}
+      },
+      unlock: function () { ensure(); },
+      set: function (v) {
+        on = !!v;
+        try { localStorage.setItem(KEY, on ? '1' : '0'); } catch (e) {}
+        if (on && ensure()) { try { SOUNDS.buy(); } catch (e) {} }   // 켰을 때 짧게 들려줘요
+      }
+    };
+  })();
+
   /* ---------- 상태 ---------- */
   var state;
   function freshState() {
     var lv = {}; UPGRADES.forEach(function (u) { lv[u.id] = 0; });
-    return { bananas: 0, total: 0, taps: 0, levels: lv, lastSeen: Date.now() };
+    return { bananas: 0, total: 0, taps: 0, levels: lv, lastSeen: Date.now(), dailyLast: '', dailyStreak: 0 };
   }
   function num(v) { v = +v; return isFinite(v) && v > 0 ? v : 0; }
   function sanitize(s) {
@@ -47,6 +104,8 @@
     if (!s || typeof s !== 'object') return base;
     base.bananas = num(s.bananas); base.total = Math.max(num(s.total), base.bananas); base.taps = Math.floor(num(s.taps));
     base.lastSeen = num(s.lastSeen) || Date.now();
+    base.dailyLast = /^\d{4}-\d{2}-\d{2}$/.test(s.dailyLast) ? s.dailyLast : '';
+    base.dailyStreak = Math.min(7, Math.floor(num(s.dailyStreak)));
     UPGRADES.forEach(function (u) { base.levels[u.id] = Math.floor(num(s.levels && s.levels[u.id])); });
     return base;
   }
@@ -166,6 +225,7 @@
     var y = clientY == null ? r.height * 0.55 : clientY - r.top;
     popAt(x, y, '+' + fmt(Math.max(gain, 1)) , false);
     squash();
+    Snd.play(wasSleeping ? 'angry' : 'tap', { combo: combo });
     if (wasSleeping) setFace('angry', 900);
     else if (combo) setFace('dance', 1400, faceNow === 'dance');
     else setFace('happy', 650, faceNow === 'happy' || Math.random() < 0.7);
@@ -185,6 +245,7 @@
     elChip.textContent = STAGES[i].name;
     if (animate && i > shownStage && shownStage >= 0) {
       showBanner(STAGES[i].name + '(으)로 진화했어요!');
+      Snd.play('evolve');
       setFace('surprise', 1000, true); say('surprise');
       setTimeout(function () { setFace('dance', 2400, true); }, 1000);
     }
@@ -214,12 +275,12 @@
       var r = elStage.getBoundingClientRect();
       popAt(e.clientX - r.left, e.clientY - r.top, '+' + fmt(bonus), true);
       lastAction = Date.now();
-      setFace('dance', 1800); say('happy');
+      Snd.play('gold'); setFace('dance', 1800); say('happy');
       if (g.parentNode) g.parentNode.removeChild(g);
       checkEvolution(); render();
     });
     elFx.parentNode.appendChild(g);
-    setFace('surprise', 1500);
+    Snd.play('ping'); setFace('surprise', 1500);
     setTimeout(function () { if (g.parentNode) g.parentNode.removeChild(g); }, dur * 1000 + 200);
     scheduleGold(false);
   }
@@ -242,9 +303,9 @@
   function buy(u) {
     var c = cost(u);
     lastAction = Date.now();
-    if (state.bananas < c) { setFace('cry', 1000); return; }
+    if (state.bananas < c) { Snd.play('deny'); setFace('cry', 1000); return; }
     state.bananas -= c; state.levels[u.id]++;
-    setFace('happy', 900);
+    Snd.play('buy'); setFace('happy', 900);
     save(); render();
   }
 
@@ -317,9 +378,59 @@
     ok.addEventListener('click', function () {
       state.bananas += gain; state.total += gain;
       document.body.removeChild(m);
+      Snd.play('chime');
       lastAction = Date.now(); setFace('happy', 1200);
       checkEvolution(); render(); save();
     });
+  }
+
+  /* ---------- 일일 보상 (7일 출석) ---------- */
+  var DAILY_MIN = [10, 15, 20, 30, 45, 60, 120];          // 그날 초당 수익의 몇 분어치를 줄지
+  var DAILY_FLOOR = [60, 100, 160, 260, 420, 700, 1500];  // 수익이 적을 때 보장하는 최소 보상
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function dayKey(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  function dailyReward(day) { return Math.floor(Math.max(perSecond() * 60 * DAILY_MIN[day - 1], DAILY_FLOOR[day - 1])); }
+  function dailyStatus() {
+    var now = new Date(), today = dayKey(now), y = new Date(now.getTime());
+    y.setDate(y.getDate() - 1);
+    if (state.dailyLast >= today) return { claimable: false };   // 오늘 이미 받았거나, 기기 날짜를 과거로 돌린 경우
+    var day = state.dailyLast === dayKey(y) ? (state.dailyStreak % 7) + 1 : 1;
+    return { claimable: true, day: day, today: today };
+  }
+  function showDaily() {
+    var st = dailyStatus();
+    if (!st.claimable || document.querySelector('.modal.daily')) return;
+    var cells = '';
+    for (var d = 1; d <= 7; d++) {
+      var cls = d < st.day ? 'done' : d === st.day ? 'today' : '';
+      cells += '<div class="day ' + cls + (d === 7 ? ' big' : '') + '"><b>' + d + '일</b><span>' + (d < st.day ? '받음' : '+' + fmt(dailyReward(d))) + '</span></div>';
+    }
+    var m = document.createElement('div');
+    m.className = 'modal daily'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+    m.innerHTML = '<div class="card"><img src="img/happy.png" alt=""><h2>오늘의 출석 선물</h2><p>' +
+      (st.day === 1 ? '오늘부터 7일 동안 매일 들어와요' : st.day + '일째 출석이에요') + '</p>' +
+      '<div class="days">' + cells + '</div><p class="hint">수익이 늘면 보상도 커져요</p><button type="button" class="ok">받기</button></div>';
+    document.body.appendChild(m);
+    var ok = m.querySelector('.ok'); ok.focus();
+    ok.addEventListener('click', function () {
+      var cur = dailyStatus();                     // 그 사이 다른 기기에서 받았다면 다시 주지 않아요
+      if (m.parentNode) m.parentNode.removeChild(m);
+      if (!cur.claimable) return;
+      var gain = dailyReward(cur.day);
+      state.bananas += gain; state.total += gain;
+      state.dailyLast = cur.today; state.dailyStreak = cur.day;
+      var r = elStage.getBoundingClientRect();
+      popAt(r.width / 2, r.height * 0.45, '+' + fmt(gain), true);
+      Snd.play('daily'); lastAction = Date.now(); setFace('dance', 1800); say('happy');
+      toast(cur.day === 7 ? '7일 출석 완료! 내일부터 다시 1일차예요' : cur.day + '일 출석 보상을 받았어요');
+      checkEvolution(); render(); save();
+    });
+  }
+  var dailyTries = 0;
+  function maybeDaily() {                          // 복귀 보상 같은 다른 팝업이 닫힌 뒤에 보여 줘요
+    if (!dailyStatus().claimable) return;
+    if (document.querySelector('.modal')) { if (dailyTries++ < 120) setTimeout(maybeDaily, 500); return; }
+    dailyTries = 0; showDaily();
   }
 
   /* ---------- 초기화 버튼 (페이지 안에서 확인) ---------- */
@@ -339,17 +450,27 @@
   /* ---------- 시작 ---------- */
   function start() {
     state = loadSave() || freshState();
+    var sndBtn = $('sndBtn');
+    function paintSnd() {
+      sndBtn.setAttribute('aria-pressed', Snd.isOn() ? 'true' : 'false');
+      sndBtn.setAttribute('aria-label', Snd.isOn() ? '소리 끄기' : '소리 켜기');
+      sndBtn.classList.toggle('off', !Snd.isOn());
+    }
+    sndBtn.addEventListener('click', function () { Snd.set(!Snd.isOn()); paintSnd(); });
+    paintSnd();
+    document.addEventListener('pointerdown', function () { Snd.unlock(); }, { once: true, passive: true });
     buildShop();
     applyStage(stageIndex(), false);
     render();
     checkOffline();
+    maybeDaily();
     lastTick = Date.now();
     setInterval(tick, 100);
     scheduleGold(true);
     say('normal');
     document.addEventListener('visibilitychange', function () {
       if (document.hidden) { save(); }
-      else { lastTick = Date.now(); checkOffline(); }
+      else { lastTick = Date.now(); checkOffline(); maybeDaily(); }
     });
     window.addEventListener('pagehide', save);
   }
@@ -370,15 +491,17 @@
     return { total: s.total, stage: STAGES[idx].name, taps: s.taps, lastSeen: s.lastSeen };
   }
   function adopt(obj) {
-    Array.prototype.forEach.call(document.querySelectorAll('.modal.offline'), function (m) { if (m.parentNode) m.parentNode.removeChild(m); });
+    Array.prototype.forEach.call(document.querySelectorAll('.modal.offline, .modal.daily'), function (m) { if (m.parentNode) m.parentNode.removeChild(m); });
     state = sanitize(obj);
     shownStage = -1; applyStage(stageIndex(), false);
-    render(); checkOffline(); save();
+    render(); checkOffline(); maybeDaily(); save();
   }
   window.BananaGame = {
     cloudOn: false,
     getState: function () { return sanitize(state); },
     summarize: summarize,
+    dailyStatus: dailyStatus,
+    dailyReward: dailyReward,
     fmt: fmt,
     adopt: adopt,
     toast: toast

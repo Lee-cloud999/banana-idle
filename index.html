@@ -69,7 +69,7 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 /* 재화 */
 .top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .wallet { min-width: 0; }
-.count { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; }
+.count { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-size: clamp(28px, 9vw, 40px); line-height: 1; font-variant-numeric: tabular-nums; }
 .count svg { flex: none; width: 34px; height: 34px; }
 .count span { overflow-wrap: anywhere; }
 .rate { margin-top: 4px; color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -199,6 +199,24 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 .pick i { font-style: normal; font-size: 12px; color: var(--brown); background: var(--banana); border-radius: 999px; padding: 1px 8px; align-self: flex-start; }
 .pick .muted { color: var(--muted); font-size: 12.5px; }
 
+.top-row { display: flex; align-items: center; gap: 6px; max-width: 100%; justify-content: flex-end; }
+.snd { flex: none; width: 32px; height: 32px; display: grid; place-items: center; padding: 0; background: var(--panel); color: var(--ink); border: 2px solid var(--line); border-radius: 50%; cursor: pointer; }
+.snd svg { width: 18px; height: 18px; }
+.snd .x { display: none; }
+.snd.off { color: var(--muted); }
+.snd.off .w { display: none; }
+.snd.off .x { display: inline; }
+.acct { max-width: 112px; }
+/* 일일 보상 */
+.modal .days { width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 4px 0; }
+.modal .day { background: var(--panel-2); border: 2px solid var(--line); border-radius: 12px; padding: 6px 2px; display: flex; flex-direction: column; gap: 2px; font-size: 11.5px; color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
+.modal .day b { font-family: var(--font-display); font-weight: 400; font-size: 14px; color: var(--ink); }
+.modal .day.big { grid-column: span 2; }
+.modal .day.today { background: var(--banana); border-color: var(--banana-deep); color: var(--brown); }
+.modal .day.today b { color: var(--brown); }
+.modal .day.done { opacity: .5; }
+.modal .hint { font-size: 12.5px; }
+
 /* 알림 */
 .toast { position: fixed; z-index: 70; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); max-width: min(92vw, 420px); background: var(--ink); color: var(--bg); border-radius: 999px; padding: 9px 18px; font-size: 14px; text-align: center; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
@@ -213,7 +231,10 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
       <div class="rate">초당 <b id="rate">0</b>개 · 탭당 <b id="tapv">1</b>개</div>
     </div>
     <div class="top-right">
-      <button class="acct" id="acctBtn" type="button" aria-label="로그인 또는 회원가입"><span class="dot guest" id="acctDot"></span><span id="acctLabel">로그인</span></button>
+      <div class="top-row">
+        <button class="snd" id="sndBtn" type="button" aria-pressed="true" aria-label="소리 끄기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="currentColor"/><path class="w" d="M15.5 8.5a5 5 0 0 1 0 7M18 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="x" d="M15 9l6 6M21 9l-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+        <button class="acct" id="acctBtn" type="button" aria-label="로그인 또는 회원가입"><span class="dot guest" id="acctDot"></span><span id="acctLabel">로그인</span></button>
+      </div>
       <div class="stage-chip" id="chip">아기 바나나</div>
     </div>
   </header>
