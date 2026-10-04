@@ -72,7 +72,7 @@
     { id: 'ch1', name: '두근두근', desc: '보물상자를 처음 열어요', ok: function (s) { return s.opened >= 1; } },
     { id: 'ch50', name: '상자 수집가', desc: '보물상자를 50개 열어요', ok: function (s) { return s.opened >= 50; } },
     { id: 'lgd', name: '전설의 장비', desc: '전설 등급 장비를 얻어요', ok: function (s) { return s.items.some(function (it) { return it.r >= 4; }); } },
-    { id: 'full', name: '풀 장착', desc: '장비 5칸을 모두 채워요', ok: function (s) { return SLOTS.every(function (x) { return s.eq[x.id]; }); } },
+    { id: 'full', name: '풀 장착', desc: '장비 6칸을 모두 채워요', ok: function (s) { return SLOTS.every(function (x) { return s.eq[x.id]; }); } },
     { id: 'b1', name: '첫 승리', desc: '보스를 처음 물리쳐요', ok: function (s) { return bossCount(s) >= 1; } },
     { id: 'b6', name: '보스 사냥 끝', desc: '보스 6마리를 모두 물리쳐요', ok: function (s) { return bossCount(s) >= BOSSES.length; } },
     { id: 'd7', name: '개근상', desc: '7일 연속 출석', ok: function (s) { return s.dailyStreak >= 7; } }
@@ -84,7 +84,8 @@
     { id: 'glasses', name: '안경', stat: '몬스터 드롭·보상', f: 1 },
     { id: 'cape', name: '망토', stat: '모든 수익', f: 0.6 },
     { id: 'shield', name: '방패', stat: '보스전 공격력', f: 1 },
-    { id: 'wings', name: '날개', stat: '환생 씨앗', f: 0.5 }
+    { id: 'wings', name: '날개', stat: '환생 씨앗', f: 0.5 },
+    { id: 'shot', name: '던지는 바나나', stat: '처치 속도', f: 0.8 }
   ];
   var RAR = [
     { name: '일반', col: '#8d96a1', v: 0.03 }, { name: '고급', col: '#3fb757', v: 0.08 },
@@ -95,12 +96,13 @@
     glasses: ['동그란 안경', '선글라스', '하트 안경', '고글', '은하 안경'],
     cape: ['천 망토', '붉은 망토', '푸른 망토', '보라 망토', '무지개 망토'],
     shield: ['나무 방패', '쇠 방패', '푸른 방패', '가시 방패', '황금 방패'],
-    wings: ['작은 날개', '흰 날개', '푸른 날개', '박쥐 날개', '천사 날개']
+    wings: ['작은 날개', '흰 날개', '푸른 날개', '박쥐 날개', '천사 날개'],
+    shot: ['바나나 조각', '부메랑 바나나', '불꽃 바나나', '얼음 바나나', '은하 바나나']
   };
   var PITY_AT = 25;
   var WEIGHTS = [60, 28, 9, 2.5, 0.5], WEIGHTS_BOSS = [38, 36, 18, 6, 2];
-  var PLACE = { weapon: 'translate(44 222) rotate(-28)', glasses: '', cape: '', shield: 'translate(266 238) rotate(8)', wings: '' };
-  var VB = { glasses: '95 118 160 70', weapon: '-45 -125 90 145', cape: '205 95 150 235', shield: '-40 -48 80 96', wings: '-45 40 150 140' };
+  var PLACE = { weapon: 'translate(44 222) rotate(-28)', glasses: '', cape: '', shield: 'translate(266 238) rotate(8)', wings: '', shot: '' };
+  var VB = { glasses: '95 118 160 70', weapon: '-45 -125 90 145', cape: '205 95 150 235', shield: '-40 -48 80 96', wings: '-45 40 150 140', shot: '0 0 64 64' };
   function starPts(cx, cy, ro, ri) { var pts = []; for (var k = 0; k < 10; k++) { var r = k % 2 ? ri : ro, a = -Math.PI / 2 + k * Math.PI / 5; pts.push((cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1)); } return pts.join(' '); }
   var BR = '#6a3d1b';
   var ART = {
@@ -150,6 +152,18 @@
     ];
   })();
   var artUid = 0;
+  (function () {
+    var B = 'M9 18C6 42 26 58 54 47 58 45 57 41 52 41 34 45 21 36 21 20 21 14 11 13 9 18Z';
+    function ban(f, s) { return '<path d="' + B + '" fill="' + f + '" stroke="' + s + '" stroke-width="3.5" stroke-linejoin="round"/><path d="M12 14l-1-6h8l-1 6Z" fill="#6a3d1b" stroke="' + s + '" stroke-width="2" stroke-linejoin="round"/>'; }
+    var shine = '<path d="M13 24C14 38 24 48 40 48" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="3" stroke-linecap="round"/>';
+    ART.shot = [
+      '<circle cx="32" cy="32" r="20" fill="#ffe66b" stroke="#a9780e" stroke-width="4"/><circle cx="32" cy="32" r="9" fill="#fff3b0" stroke="#a9780e" stroke-width="2.5"/><circle cx="32" cy="32" r="2.5" fill="#6a3d1b"/><circle cx="26" cy="29" r="1.6" fill="#6a3d1b"/><circle cx="38" cy="29" r="1.6" fill="#6a3d1b"/><circle cx="32" cy="38" r="1.6" fill="#6a3d1b"/>',
+      ban('#ffd23f', '#6a3d1b') + shine + '<path d="M44 12l10 3M46 22l12 2M40 4l8 4" stroke="#8d96a1" stroke-width="3" stroke-linecap="round"/>',
+      '<path d="M46 40C38 34 36 26 40 18 44 22 50 22 50 14 58 22 62 34 54 42Z" fill="#ff7a1a" stroke="#b02a00" stroke-width="2.5" stroke-linejoin="round"/>' + ban('#ffd23f', '#b02a00') + shine + '<path d="M50 38C46 34 46 30 48 26 52 30 54 34 50 38Z" fill="#ffe66b"/>',
+      ban('#bfe6ff', '#2a6ba8') + shine + '<path d="M40 14l5-8 3 9zM50 24l9-3-6 8zM34 6l3-4 3 5z" fill="#e8f6ff" stroke="#2a6ba8" stroke-width="2" stroke-linejoin="round"/>',
+      ban('#5b3bb8', '#241552') + '<polygon points="' + starPts(15, 30, 4.5, 2) + '" fill="#ffe66b"/><polygon points="' + starPts(28, 46, 4, 1.8) + '" fill="#fff"/><polygon points="' + starPts(44, 45, 3.4, 1.5) + '" fill="#8fc4ff"/><circle cx="46" cy="14" r="3" fill="#ff6fa3"/><circle cx="56" cy="26" r="2" fill="#ffe66b"/>'
+    ];
+  })();
   function artOf(slot, tier) { return ART[slot][tier].replace(/@/g, 'u' + (++artUid)); }
   function iconSvg(it) { return '<svg viewBox="' + VB[it.s] + '" aria-hidden="true">' + artOf(it.s, it.r) + '</svg>'; }
   function chestSvg(open) {
@@ -246,7 +260,7 @@
   var state;
   function freshState() {
     var lv = {}; UPGRADES.forEach(function (u) { lv[u.id] = 0; });
-    return { bananas: 0, total: 0, run: 0, seeds: 0, resets: 0, chests: 10, pend: null, pity: 0, opened: 0, iid: 0, items: [], eq: { weapon: 0, glasses: 0, cape: 0, shield: 0, wings: 0 }, wave: 1, wk: 0, kills: 0, auto: true, bosses: {}, spent: 0, perks: {}, ach: {}, golds: 0, taps: 0, levels: lv, lastSeen: Date.now(), dailyLast: '', dailyStreak: 0 };
+    return { bananas: 0, total: 0, run: 0, seeds: 0, resets: 0, chests: 10, pend: null, pity: 0, opened: 0, iid: 0, items: [], eq: { weapon: 0, glasses: 0, cape: 0, shield: 0, wings: 0, shot: 0 }, wave: 1, wk: 0, kills: 0, auto: true, bosses: {}, spent: 0, perks: {}, ach: {}, golds: 0, taps: 0, levels: lv, lastSeen: Date.now(), dailyLast: '', dailyStreak: 0 };
   }
   function num(v) { v = +v; return isFinite(v) && v > 0 ? v : 0; }
   function sanitize(s) {
@@ -521,7 +535,7 @@
       elEvoPct.textContent = '신!';
       elEvoBar.style.width = '100%';
     }
-    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v23';
+    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v24';
   }
 
   /* ---------- 환생 (프레스티지) ---------- */
@@ -653,7 +667,8 @@
     b.className = 'shot'; b.style.left = sx + 'px'; b.style.top = sy + 'px';
     b.style.setProperty('--dx', (ex - sx) + 'px'); b.style.setProperty('--dy', (ey - sy) + 'px');
     b.style.width = b.style.height = (26 * sa.s) + 'px'; b.style.margin = (-13 * sa.s) + 'px 0 0 ' + (-13 * sa.s) + 'px';
-    b.innerHTML = '<svg viewBox="0 0 64 64"' + (sa.spin ? '' : ' style="animation:none;transform:rotate(' + sa.r + 'deg)"') + '><use href="#i-banana"/></svg>';
+    var sit = itemById(state.eq.shot);
+    b.innerHTML = '<svg viewBox="0 0 64 64"' + (sa.spin ? '' : ' style="animation:none;transform:rotate(' + sa.r + 'deg)"') + '>' + (sit ? artOf('shot', sit.r) : '<use href="#i-banana"/>') + '</svg>';
     elFx.appendChild(b);
     setTimeout(function () { if (b.parentNode) b.parentNode.removeChild(b); }, 330);
   }
@@ -665,7 +680,7 @@
     var q = queue[0];
     if (q.armed) return;
     q.armed = true;
-    q.max = q.hp = Math.max(3, autoDps() * MON_SECS * (0.85 + Math.random() * 0.3));
+    q.max = q.hp = Math.max(3, autoDps() * MON_SECS * (0.85 + Math.random() * 0.3) / (1 + eqVal('shot')));
   }
   function spawnMon() {
     var si = Math.min(stageIndex(), 6);
@@ -847,13 +862,13 @@
     elGearUnder.innerHTML = layer('wings') + layer('cape');
     var ghost = '';
     if (editSlot === 'shot') {
-      var sa = adjOf('shot'), fw = elGearOver.getBoundingClientRect().width || 112, u = 26 * sa.s * 360 / fw / 64;
-      ghost = '<g transform="translate(' + (72 + sa.x) + ' ' + (184.25 + sa.y) + ') rotate(' + (sa.spin ? 0 : sa.r) + ') scale(' + u + ') translate(-32 -32)" style="filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 5px #2a8cff)"><use href="#i-banana" width="64" height="64"/></g>';
+      var adjIt = itemById(state.eq.shot), sa = adjOf('shot'), fw = elGearOver.getBoundingClientRect().width || 112, u = 26 * sa.s * 360 / fw / 64;
+      ghost = '<g transform="translate(' + (72 + sa.x) + ' ' + (184.25 + sa.y) + ') rotate(' + (sa.spin ? 0 : sa.r) + ') scale(' + u + ') translate(-32 -32)" style="filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 5px #2a8cff)">' + (adjIt ? artOf('shot', adjIt.r) : '<use href="#i-banana" width="64" height="64"/>') + '</g>';
     }
     elGearOver.innerHTML = layer('shield') + layer('glasses') + layer('weapon') + ghost;
   }
   /* ===== 위치 조정 모드 ===== */
-  var PIVOT = { weapon: [44, 222], shield: [266, 238], glasses: [175, 153], cape: [280, 212], wings: [30, 110] };
+  var PIVOT = { weapon: [44, 222], shield: [266, 238], glasses: [175, 153], cape: [280, 212], wings: [30, 110], shot: [0, 0] };
   var ADJ_KEY = 'banana-gear-adj-v1', adj = {}, editSlot = null;
   try { adj = JSON.parse(localStorage.getItem(ADJ_KEY) || '{}') || {}; } catch (e) { adj = {}; }
   function adjOf(slot) { var a = adj[slot] || {}; return { x: +a.x || 0, y: +a.y || 0, r: +a.r || 0, s: +a.s || 1, spin: a.spin === 0 ? 0 : 1 }; }
@@ -877,7 +892,7 @@
   function editTabs() {
     var html = '';
     SLOTS.forEach(function (x) {
-      if (!state.eq[x.id]) return;
+      if (!state.eq[x.id] || x.id === 'shot') return;
       html += '<button type="button" data-slot="' + x.id + '" class="' + (editSlot === x.id ? 'on' : '') + '">' + x.name + '</button>';
     });
     html += '<button type="button" data-slot="shot" class="' + (editSlot === 'shot' ? 'on' : '') + '">던지는 바나나</button>';
