@@ -131,6 +131,7 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 .combo.show { opacity: 1; }
 
 /* 업그레이드 */
+.shop[hidden], .gearpane[hidden] { display: none; }
 .shop { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-bottom: 4px; overscroll-behavior: contain; }
 .shop-head { font-family: var(--font-display); font-size: 17px; margin: 2px 2px 0; }
 .item { display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; text-align: left; background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 8px 10px; cursor: pointer; transition: transform .08s, border-color .15s; }
@@ -264,7 +265,7 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 .shot svg { width: 100%; height: 100%; animation: spin .3s linear infinite; }
 @keyframes shot { to { transform: translate(var(--dx), var(--dy)); } }
 @keyframes lunge { 0% { transform: translateX(0); } 35% { transform: translateX(-24%) rotate(-8deg); } 100% { transform: none; } }
-@media (prefers-reduced-motion: reduce) { .bigchest, .lunger.atk, .chestbox.shake, .rcard, .shot, .shot svg, .mon .mbody, .mon.in, .mon.hit .mbody, .faces.atk { animation: none; } .mon.die { animation: none; opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .chestbig, .bigchest, .lunger.atk, .chestbox.shake, .rcard, .shot, .shot svg, .mon .mbody, .mon.in, .mon.hit .mbody, .faces.atk { animation: none; } .mon.die { animation: none; opacity: 0; } }
 
 /* 보스전 */
 .battle { display: flex; align-items: center; gap: 10px; background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 8px 10px; }
@@ -297,7 +298,31 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 .item .ms { font-size: 11.5px; color: var(--brown); }
 
 .shop-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.shop-bar .shop-head { flex: 1; margin: 2px; }
+.shop-bar .sp { flex: 1; }
+.tab { background: var(--panel); color: var(--muted); border: 2px solid var(--line); border-radius: 999px; padding: 5px 13px; font-family: var(--font-display); font-size: 15px; cursor: pointer; }
+.tab.on { background: var(--banana); color: var(--brown); border-color: var(--banana-deep); }
+.gearpane { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 10px; }
+.gp-left { min-height: 0; display: flex; flex-direction: column; gap: 6px; background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 8px; }
+.gp-slots { flex: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.gcell { position: relative; aspect-ratio: 1 / 1; min-width: 0; padding: 0; display: grid; place-items: center; background: var(--panel-2); border: 2px solid var(--rc, var(--line)); border-radius: 10px; cursor: pointer; color: var(--muted); font-size: 10.5px; }
+.gcell svg { width: 86%; height: 78%; display: block; }
+.gcell.empty { cursor: default; border-style: dashed; opacity: .8; }
+.gcell.slot { background: var(--banana); border-style: solid; }
+.gcell.slot.empty { background: var(--panel-2); }
+.gcell .tg { position: absolute; left: 2px; bottom: 1px; font-size: 9.5px; color: var(--brown); font-weight: 700; }
+.gcell.new::after { content: ''; position: absolute; right: 3px; top: 3px; width: 7px; height: 7px; border-radius: 50%; background: var(--bad); }
+.gp-grid { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; align-content: start; overscroll-behavior: contain; }
+.gp-foot { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12px; color: var(--muted); }
+.gp-foot .sellall { padding: 3px 8px; font-size: 11.5px; }
+.gp-right { min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; }
+.gp-right b { font-family: var(--font-display); font-weight: 400; font-size: 16px; }
+.gp-right span { font-size: 12px; color: var(--muted); }
+.chestbig { position: relative; width: 100%; max-width: 168px; aspect-ratio: 6 / 5; padding: 0; background: none; border: 0; cursor: pointer; filter: drop-shadow(0 0 14px rgba(255, 210, 63, .9)); animation: pulse 1.1s ease-in-out infinite; }
+.chestbig.none { filter: grayscale(.8) opacity(.55); animation: none; cursor: default; }
+.chestbig .cico, .chestbig .cico svg { display: block; width: 100%; height: 100%; }
+.chestbig .cnt { position: absolute; z-index: 1; right: 0; top: -4px; min-width: 30px; height: 30px; padding: 0 7px; border-radius: 999px; background: var(--bad); color: #fff; border: 2px solid #fff; font-family: var(--font-display); font-size: 17px; line-height: 26px; text-align: center; }
+.chestbig.none .cnt { background: var(--muted); }
+.modal .rcard .cmp { font-size: 12.5px; }
 .mini { flex: none; background: var(--panel); color: var(--ink); border: 2px solid var(--line); border-radius: 999px; padding: 4px 11px; font-size: 13px; cursor: pointer; }
 .mini[hidden] { display: none; }
 .modal .card.tall { max-height: calc(100% - 8px); overflow-y: auto; align-items: stretch; }
@@ -430,8 +455,25 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
     <div class="pt"><b id="prestTitle">바나나 씨앗 0개</b><span id="prestSub"></span></div>
     <button id="prestBtn" type="button">환생</button>
   </section>
-  <div class="shop-bar"><div class="shop-head">업그레이드</div><button type="button" class="mini" id="perkBtn" hidden>씨앗 상점</button><button type="button" class="mini" id="achBtn">업적</button><button type="button" class="mini" id="gearBtn">장비</button><button type="button" class="mini chest" id="chestBtn">상자 0</button></div>
-  <section class="shop" id="shop" aria-label="업그레이드 목록"></section>
+  <div class="shop-bar">
+    <button type="button" class="tab on" id="tabGear" data-tab="gear">장비·상자</button>
+    <button type="button" class="tab" id="tabUp" data-tab="up">업그레이드</button>
+    <span class="sp"></span>
+    <button type="button" class="mini" id="perkBtn" hidden>씨앗 상점</button><button type="button" class="mini" id="achBtn">업적</button>
+  </div>
+  <section class="gearpane" id="gearPane" aria-label="장비와 보물상자">
+    <div class="gp-left">
+      <div class="gp-slots" id="gpSlots"></div>
+      <div class="gp-grid" id="gpGrid"></div>
+      <div class="gp-foot"><span id="gpCount"></span><button type="button" class="sellall" id="gpSell" hidden>일반·고급 팔기</button></div>
+    </div>
+    <div class="gp-right">
+      <button type="button" class="chestbig" id="mainChest" aria-label="보물상자 열기"><span class="cnt" id="mainCnt">0</span><span class="cico" id="mainIco"></span></button>
+      <b id="chestMsg">상자를 눌러 열어요</b>
+      <span id="chestSub"></span>
+    </div>
+  </section>
+  <section class="shop" id="shop" aria-label="업그레이드 목록" hidden></section>
   <footer class="foot">
     <span id="stats">자동으로 저장돼요</span>
     <button class="reset" id="reset" type="button">처음부터 다시</button>

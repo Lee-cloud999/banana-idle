@@ -500,7 +500,7 @@
       elEvoPct.textContent = '신!';
       elEvoBar.style.width = '100%';
     }
-    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v12';
+    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v13';
   }
 
   /* ---------- 환생 (프레스티지) ---------- */
@@ -737,9 +737,79 @@
   elFightBtn.addEventListener('click', function () { if (!battle.on) startFight(pickBoss()); renderBattle(); });
 
   /* ---------- 보물상자 · 장비창 ---------- */
-  var elChestBtn = $('chestBtn'), elGearBtn = $('gearBtn'), elGearUnder = $('gearUnder'), elGearOver = $('gearOver');
+  var elGearUnder = $('gearUnder'), elGearOver = $('gearOver');
   var gearKey = '';
   var elBigChest = $('bigChest'), elBigCnt = $('bigCnt');
+  var elMainChest = $('mainChest'), elMainCnt = $('mainCnt'), elChestMsg = $('chestMsg'), elChestSub = $('chestSub');
+  var elPane = $('gearPane'), elSlots = $('gpSlots'), elGrid = $('gpGrid'), elGpCount = $('gpCount'), elGpSell = $('gpSell');
+  var tab = 'gear', paneKey = '', newIds = {};
+  try { tab = localStorage.getItem('banana-ssuk-tab') === 'up' ? 'up' : 'gear'; } catch (e) {}
+  $('mainIco').innerHTML = chestSvg(false);
+  function setTab(t) {
+    tab = t; try { localStorage.setItem('banana-ssuk-tab', t); } catch (e) {}
+    elPane.hidden = t !== 'gear'; elShop.hidden = t !== 'up';
+    $('tabGear').classList.toggle('on', t === 'gear'); $('tabUp').classList.toggle('on', t === 'up');
+    paneKey = ''; renderChestBtn();
+  }
+  function cellHtml(it, cls, tag) {
+    return '<button type="button" class="gcell ' + cls + '" style="--rc:' + RAR[it.r].col + '" data-id="' + it.id + '" aria-label="' + itemName(it) + ' ' + RAR[it.r].name + '">' + iconSvg(it) + (tag ? '<span class="tg">' + tag + '</span>' : '') + '</button>';
+  }
+  function renderPane() {
+    if (tab !== 'gear') return;
+    var sig = state.items.map(function (it) { return it.id; }).join(',') + '|' + SLOTS.map(function (x) { return state.eq[x.id]; }).join(',') + '|' + Object.keys(newIds).join(',') + '|' + Math.floor(perSecond() > 0);
+    if (sig === paneKey) return;
+    paneKey = sig;
+    var sl = '';
+    SLOTS.forEach(function (x) {
+      var it = itemById(state.eq[x.id]);
+      sl += it ? cellHtml(it, 'slot', '') : '<div class="gcell slot empty" title="' + x.name + '">' + x.name + '</div>';
+    });
+    elSlots.innerHTML = sl;
+    var list = state.items.slice().sort(function (a, b) { return (b.r - a.r) || (itemVal(b) - itemVal(a)) || (b.id - a.id); });
+    var gh = '';
+    list.forEach(function (it) { gh += cellHtml(it, newIds[it.id] ? 'new' : '', state.eq[it.s] === it.id ? '착' : ''); });
+    for (var k = list.length; k < INV_MAX; k++) gh += '<div class="gcell empty"></div>';
+    elGrid.innerHTML = gh;
+    elGpCount.textContent = '가방 ' + state.items.length + '/' + INV_MAX;
+    var n = state.items.filter(function (it) { return it.r <= 1 && state.eq[it.s] !== it.id; }).length;
+    elGpSell.hidden = n < 1; elGpSell.textContent = '일반·고급 ' + n + '개 팔기';
+  }
+  elPane.addEventListener('click', function (e) {
+    var c = e.target.closest ? e.target.closest('.gcell[data-id]') : null;
+    if (!c) return;
+    var it = itemById(+c.getAttribute('data-id')); if (!it) return;
+    delete newIds[it.id]; paneKey = '';
+    showItem(it);
+  });
+  elGpSell.addEventListener('click', function () {
+    var sellable = state.items.filter(function (it) { return it.r <= 1 && state.eq[it.s] !== it.id; }), total = 0;
+    sellable.forEach(function (it) { total += sellValue(it); });
+    var ids = sellable.map(function (it) { return it.id; });
+    state.items = state.items.filter(function (x) { return ids.indexOf(x.id) < 0; });
+    state.bananas += total; Snd.play('gold'); toast('바나나 ' + fmt(total) + '개를 받았어요'); paneKey = ''; save(); render();
+  });
+  function showItem(it) {
+    var m = document.createElement('div');
+    m.className = 'modal itemm'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+    var on = state.eq[it.s] === it.id, cur = itemById(state.eq[it.s]);
+    var cmp = on ? '지금 끼고 있어요' : cur ? (itemVal(it) >= itemVal(cur) ? '지금 것보다 +' : '지금 것보다 ') + Math.round((itemVal(it) - itemVal(cur)) * 100) + '%p' : '비어 있는 칸이에요';
+    m.innerHTML = '<div class="card"><div class="rcard" style="--rc:' + RAR[it.r].col + '"><div class="ibig">' + iconSvg(it) + '</div><span class="rtag">' + RAR[it.r].name + ' · ' + slotInfo(it.s).name + '</span><b>' + itemName(it) + '</b><span>' + itemStat(it) + '</span><span class="cmp">' + cmp + '</span></div>' +
+      '<div class="btns"><button type="button" class="no">닫기</button>' +
+      (on ? '<button type="button" class="off">벗기</button>' : '<button type="button" class="sell">팔기 ' + fmt(sellValue(it)) + '</button><button type="button" class="go eq">착용</button>') + '</div></div>';
+    document.body.appendChild(m);
+    function close() { if (m.parentNode) m.parentNode.removeChild(m); }
+    m.querySelector('.no').addEventListener('click', close);
+    m.addEventListener('click', function (e) { if (e.target === m) close(); });
+    var q;
+    if ((q = m.querySelector('.eq'))) q.addEventListener('click', function () { equipItem(it); Snd.play('buy'); paneKey = ''; save(); render(); close(); });
+    if ((q = m.querySelector('.off'))) q.addEventListener('click', function () { state.eq[it.s] = 0; gearKey = ''; paneKey = ''; renderGear(); Snd.play('deny'); save(); render(); close(); });
+    if ((q = m.querySelector('.sell'))) q.addEventListener('click', function () {
+      state.bananas += sellValue(it); state.items = state.items.filter(function (x) { return x.id !== it.id; });
+      Snd.play('buy'); paneKey = ''; save(); render(); close();
+    });
+  }
+  $('tabGear').addEventListener('click', function () { setTab('gear'); });
+  $('tabUp').addEventListener('click', function () { setTab('up'); });
   $('bigIco').innerHTML = chestSvg(false);
   elBigChest.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
   function renderGear() {
@@ -760,9 +830,12 @@
     elWrap.classList.toggle('has-hat', !!state.eq.hat);
   }
   function renderChestBtn() {
-    elChestBtn.textContent = '상자 ' + state.chests;
-    elChestBtn.classList.toggle('has', state.chests > 0);
-    elBigChest.hidden = state.chests < 1; elBigCnt.textContent = state.chests;
+    elBigChest.hidden = state.chests < 1 || tab === 'gear'; elBigCnt.textContent = state.chests;
+    elMainCnt.textContent = state.chests;
+    elMainChest.classList.toggle('none', state.chests < 1);
+    elChestMsg.textContent = state.chests > 0 ? '눌러서 열어요!' : '상자가 없어요';
+    elChestSub.textContent = state.chests > 0 ? '한 번만 누르면 바로 열려요' : '몬스터·보스·5스테이지마다 나와요';
+    renderPane();
   }
   function addChest(n) {
     state.chests += n;
@@ -791,6 +864,8 @@
       var cur = itemById(state.eq[it.s]);
       if (!cur || itemVal(it) > itemVal(cur)) { res.equipped = true; res.upgrade = !!cur; equipItem(it); }
     }
+    if (!res.sold && !res.equipped) newIds[it.id] = 1;
+    paneKey = '';
     Snd.play(it.r >= 3 ? 'evolve' : it.r >= 2 ? 'gold' : 'buy');
     checkAch(); save(); render();
     return res;
@@ -818,10 +893,10 @@
         m.innerHTML = '<div class="card"><div class="chestbox">' + chestSvg(true) + '</div>' +
           '<div class="rcard" style="--rc:' + col + '"><div class="ibig">' + iconSvg(it) + '</div><span class="rtag">' + RAR[it.r].name + '</span><b>' + itemName(it) + '</b><span>' + itemStat(it) + '</span></div>' +
           '<p>' + (res.sold ? '가방이 가득 차서 바나나 ' + fmt(res.sold) + '개에 팔았어요' : res.equipped ? (res.upgrade ? '더 좋아서 바로 장착했어요!' : '바로 장착했어요!') : '가방에 넣었어요') + '</p>' +
-          '<div class="btns"><button type="button" class="no">닫기</button><button type="button" class="gear">장비창</button>' +
+          '<div class="btns"><button type="button" class="no">닫기</button><button type="button" class="gear">장비 보기</button>' +
           (state.chests > 0 ? '<button type="button" class="go">한 번 더 (' + state.chests + ')</button>' : '') + '</div></div>';
         m.querySelector('.no').addEventListener('click', close);
-        m.querySelector('.gear').addEventListener('click', function () { close(); showGear(); });
+        m.querySelector('.gear').addEventListener('click', function () { close(); setTab('gear'); });
         var again = m.querySelector('.go'); if (again) again.addEventListener('click', idleThenOpen);
       }, 550);
     }
@@ -829,59 +904,8 @@
     idle();
     if (state.chests > 0) openIt();             // 한 번 눌러서 바로 열어요
   }
-  function showGear() {
-    var old = document.querySelector('.modal.gearm'); if (old && old.parentNode) old.parentNode.removeChild(old);
-    var m = document.createElement('div');
-    m.className = 'modal gearm'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
-    document.body.appendChild(m);
-    function close() { if (m.parentNode) m.parentNode.removeChild(m); }
-    function paint() {
-      var slots = '';
-      SLOTS.forEach(function (x) {
-        var it = itemById(state.eq[x.id]);
-        slots += '<div class="gslot"' + (it ? ' style="--rc:' + RAR[it.r].col + '"' : '') + '>' + (it ? iconSvg(it) : '<span class="empty">–</span>') +
-          '<b>' + (it ? itemName(it) : x.name) + '</b><span>' + (it ? '+' + Math.round(itemVal(it) * 100) + '%' : '비어 있어요') + '</span></div>';
-      });
-      var list = state.items.slice().sort(function (a, b) { return (b.r - a.r) || (itemVal(b) - itemVal(a)); });
-      var rows = '';
-      list.forEach(function (it) {
-        var on = state.eq[it.s] === it.id;
-        rows += '<div class="irow' + (on ? ' on' : '') + '" style="--rc:' + RAR[it.r].col + '">' + iconSvg(it) +
-          '<div class="t"><b>' + itemName(it) + ' <i style="font-style:normal;font-weight:400">· ' + RAR[it.r].name + '</i></b><span>' + itemStat(it) + '</span></div>' +
-          '<div class="bt">' + (on ? '<span>착용 중</span>' : '<button type="button" data-eq="' + it.id + '">착용</button><button type="button" class="sell" data-sell="' + it.id + '">팔기 ' + fmt(sellValue(it)) + '</button>') + '</div></div>';
-      });
-      var sellable = state.items.filter(function (it) { return it.r <= 1 && state.eq[it.s] !== it.id; });
-      m.innerHTML = '<div class="card tall"><h2>장비</h2><div class="gslots">' + slots + '</div>' +
-        '<p class="sub">가방 ' + state.items.length + '/' + INV_MAX + ' · 상자 ' + state.chests + '개 · 열어 본 상자 ' + state.opened + '개</p>' +
-        '<div class="list">' + (rows || '<p>아직 장비가 없어요. 보물상자를 열어 보세요!</p>') + '</div>' +
-        (sellable.length ? '<button type="button" class="sellall" id="sellAll">쓰지 않는 일반·고급 ' + sellable.length + '개 한꺼번에 팔기</button>' : '') +
-        '<button type="button" class="ok close">닫기</button></div>';
-      m.querySelector('.close').addEventListener('click', close);
-      Array.prototype.forEach.call(m.querySelectorAll('[data-eq]'), function (b) {
-        b.addEventListener('click', function () { var it = itemById(+b.getAttribute('data-eq')); if (it) { equipItem(it); Snd.play('buy'); save(); paint(); } });
-      });
-      Array.prototype.forEach.call(m.querySelectorAll('[data-sell]'), function (b) {
-        b.addEventListener('click', function () {
-          var it = itemById(+b.getAttribute('data-sell')); if (!it || state.eq[it.s] === it.id) return;
-          state.bananas += sellValue(it);
-          state.items = state.items.filter(function (x) { return x.id !== it.id; });
-          Snd.play('buy'); save(); render(); paint();
-        });
-      });
-      var sa = m.querySelector('#sellAll');
-      if (sa) sa.addEventListener('click', function () {
-        var total = 0;
-        sellable.forEach(function (it) { total += sellValue(it); });
-        var ids = sellable.map(function (it) { return it.id; });
-        state.items = state.items.filter(function (x) { return ids.indexOf(x.id) < 0; });
-        state.bananas += total; Snd.play('gold'); toast('바나나 ' + fmt(total) + '개를 받았어요'); save(); render(); paint();
-      });
-    }
-    paint();
-  }
-  elChestBtn.addEventListener('click', showChest);
   elBigChest.addEventListener('click', showChest);
-  elGearBtn.addEventListener('click', showGear);
+  elMainChest.addEventListener('click', function () { if (state.chests > 0) showChest(); });
 
   /* ---------- 업적 · 씨앗 상점 ---------- */
   var elAchBtn = $('achBtn'), elPerkBtn = $('perkBtn');
@@ -1058,6 +1082,7 @@
     paintSnd();
     document.addEventListener('pointerdown', function () { Snd.unlock(); }, { once: true, passive: true });
     buildShop();
+    setTab(tab);
     applyStage(stageIndex(), false);
     render();
     checkOffline();
