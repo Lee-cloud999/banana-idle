@@ -417,7 +417,7 @@
       elEvoPct.textContent = '신!';
       elEvoBar.style.width = '100%';
     }
-    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v8';
+    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v9';
   }
 
   /* ---------- 환생 (프레스티지) ---------- */
@@ -543,8 +543,8 @@
   function shoot() {
     var body = frontBody(); if (!body) return;
     var r = elStage.getBoundingClientRect(), f = elFaceWrap.getBoundingClientRect(), m = body.getBoundingClientRect();
-    var sx = f.left - r.left + f.width * 0.8, sy = f.top - r.top + f.height * 0.55;
-    var ex = m.left - r.left + m.width * 0.35, ey = m.top - r.top + m.height * 0.55;
+    var sx = f.left - r.left + f.width * 0.2, sy = f.top - r.top + f.height * 0.55;
+    var ex = m.left - r.left + m.width * 0.65, ey = m.top - r.top + m.height * 0.55;
     var b = document.createElement('div');
     b.className = 'shot'; b.style.left = sx + 'px'; b.style.top = sy + 'px';
     b.style.setProperty('--dx', (ex - sx) + 'px'); b.style.setProperty('--dy', (ey - sy) + 'px');

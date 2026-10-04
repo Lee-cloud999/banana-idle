@@ -88,7 +88,7 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .bar { background: rgba(0,0,0,.25); } }
 .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--banana), var(--banana-deep)); border-radius: 999px; transition: width .25s ease; }
 
-.char-btn { position: relative; z-index: 2; flex: 1; min-height: 0; width: 100%; background: none; border: 0; padding: 0 0 6px 5%; cursor: pointer; display: flex; align-items: flex-end; justify-content: flex-start; }
+.char-btn { position: relative; z-index: 2; flex: 1; min-height: 0; width: 100%; background: none; border: 0; padding: 0 5% 6px 0; cursor: pointer; display: flex; align-items: flex-end; justify-content: flex-end; }
 .char-wrap { position: relative; width: min(50%, 220px); padding-top: 13%; transform: scale(var(--sc, 1)); transform-origin: 50% 100%; transition: transform .6s cubic-bezier(.3,1.6,.5,1); }
 .char-bob { animation: bob 2.6s ease-in-out infinite; transform-origin: 50% 100%; }
 .char-bob.sleeping { animation-duration: 4.2s; }
@@ -112,7 +112,7 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 .sparkles i:nth-child(3) { left: 78%; top: 72%; animation-delay: 1.3s; }
 .sparkles i:nth-child(4) { left: 18%; top: 78%; animation-delay: 1.8s; width: 8px; height: 8px; }
 
-.bubble { position: absolute; z-index: 4; left: 32%; top: 58px; transform: translateX(-50%) scale(.9); max-width: 86%; background: var(--panel); color: var(--ink); border: 2px solid var(--line); border-radius: 16px; padding: 6px 12px; font-size: 14px; text-align: center; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; box-shadow: 0 3px 0 var(--shadow); }
+.bubble { position: absolute; z-index: 4; left: 68%; top: 58px; transform: translateX(-50%) scale(.9); max-width: 86%; background: var(--panel); color: var(--ink); border: 2px solid var(--line); border-radius: 16px; padding: 6px 12px; font-size: 14px; text-align: center; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; box-shadow: 0 3px 0 var(--shadow); }
 .bubble.show { opacity: 1; transform: translateX(-50%) scale(1); }
 
 .fx { position: absolute; inset: 0; z-index: 5; pointer-events: none; overflow: hidden; }
@@ -122,7 +122,7 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 .gold svg { width: 100%; height: 100%; animation: spin 1.6s ease-in-out infinite; }
 .banner { position: absolute; z-index: 7; left: 50%; top: 44%; transform: translate(-50%, -50%) scale(.6); background: var(--banana); color: var(--brown); border: 3px solid var(--brown); border-radius: 18px; padding: 10px 18px; font-family: var(--font-display); font-size: 20px; text-align: center; opacity: 0; pointer-events: none; max-width: 90%; box-shadow: 0 5px 0 var(--brown); }
 .banner.show { animation: banner 2.6s ease forwards; }
-.combo { position: absolute; z-index: 3; left: 12px; bottom: 12px; background: var(--brown); color: #fff; border-radius: 999px; padding: 4px 12px; font-family: var(--font-display); font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.combo { position: absolute; z-index: 3; right: 12px; bottom: 12px; background: var(--brown); color: #fff; border-radius: 999px; padding: 4px 12px; font-family: var(--font-display); font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
 .combo.show { opacity: 1; }
 
 /* 업그레이드 */
@@ -224,10 +224,10 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 /* 들판 몬스터 */
 .wavelbl { position: absolute; z-index: 2; right: 12px; top: 52px; background: rgba(0,0,0,.35); color: #fff; border-radius: 999px; padding: 2px 10px; font-family: var(--font-display); font-size: 13px; pointer-events: none; }
 .mons { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
-.mon { position: absolute; z-index: 3; right: 5%; bottom: 10px; width: min(32%, 140px); pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: right .35s ease, width .35s ease, opacity .35s; }
-.mons .mon.s0 { right: 22%; width: min(25%, 112px); z-index: 3; }
-.mons .mon.s1 { right: 11%; width: min(20%, 90px); z-index: 2; opacity: .92; }
-.mons .mon.s2 { right: 1.5%; width: min(16%, 72px); z-index: 1; opacity: .82; }
+.mon { position: absolute; z-index: 3; left: 5%; bottom: 10px; width: min(32%, 140px); pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: left .35s ease, width .35s ease, opacity .35s; }
+.mons .mon.s0 { left: 22%; width: min(25%, 112px); z-index: 3; }
+.mons .mon.s1 { left: 11%; width: min(20%, 90px); z-index: 2; opacity: .92; }
+.mons .mon.s2 { left: 1.5%; width: min(16%, 72px); z-index: 1; opacity: .82; }
 .mons .mon.s1 .mbody, .mons .mon.s2 .mbody { filter: brightness(.92); }
 .stars, .stal { display: none; }
 .reg-5 .stars, .reg-6 .stars { display: block; }
@@ -242,7 +242,7 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 .reg-3 .evo-label, .reg-4 .evo-label, .reg-5 .evo-label { color: #fff; }
 .reg-3 .evo-label span:last-child, .reg-4 .evo-label span:last-child, .reg-5 .evo-label span:last-child { color: rgba(255,255,255,.75); }
 .mon[hidden] { display: none; }
-.mon.boss { width: min(42%, 190px); }
+.mon.boss { left: 3%; width: min(36%, 160px); }
 .mon .mbar { width: 80%; height: 8px; border-radius: 999px; background: rgba(0,0,0,.3); border: 1.5px solid rgba(0,0,0,.45); overflow: hidden; }
 .mon .mbar i { display: block; height: 100%; width: 100%; background: var(--bad); transition: width .12s linear; }
 .mon .mbody { width: 100%; animation: monbob 1.3s ease-in-out infinite; transform-origin: 50% 100%; }
@@ -252,13 +252,13 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 .mon.hit .mbody { animation: monhit .14s linear, monbob 1.3s ease-in-out infinite; }
 .faces.atk { animation: lunge .26s ease-out; }
 @keyframes monbob { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.04, .94); } }
-@keyframes monin { from { transform: translateX(40px) scale(.7); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes monin { from { transform: translateX(-40px) scale(.7); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes mondie { to { transform: scale(.4) translateY(10px); opacity: 0; } }
-@keyframes monhit { 0% { filter: brightness(2.2); transform: translateX(6px); } 100% { filter: none; transform: none; } }
+@keyframes monhit { 0% { filter: brightness(2.2); transform: translateX(-6px); } 100% { filter: none; transform: none; } }
 .shot { position: absolute; width: 26px; height: 26px; margin: -13px 0 0 -13px; pointer-events: none; animation: shot .3s ease-in forwards; filter: drop-shadow(0 0 6px rgba(255,210,63,.9)); }
 .shot svg { width: 100%; height: 100%; animation: spin .3s linear infinite; }
 @keyframes shot { to { transform: translate(var(--dx), var(--dy)); } }
-@keyframes lunge { 0% { transform: translateX(0); } 35% { transform: translateX(24%) rotate(8deg); } 100% { transform: none; } }
+@keyframes lunge { 0% { transform: translateX(0); } 35% { transform: translateX(-24%) rotate(-8deg); } 100% { transform: none; } }
 @media (prefers-reduced-motion: reduce) { .shot, .shot svg, .mon .mbody, .mon.in, .mon.hit .mbody, .faces.atk { animation: none; } .mon.die { animation: none; opacity: 0; } }
 
 /* 보스전 */
