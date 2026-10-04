@@ -72,7 +72,7 @@
     { id: 'ch1', name: '두근두근', desc: '보물상자를 처음 열어요', ok: function (s) { return s.opened >= 1; } },
     { id: 'ch50', name: '상자 수집가', desc: '보물상자를 50개 열어요', ok: function (s) { return s.opened >= 50; } },
     { id: 'lgd', name: '전설의 장비', desc: '전설 등급 장비를 얻어요', ok: function (s) { return s.items.some(function (it) { return it.r >= 4; }); } },
-    { id: 'full', name: '풀 장착', desc: '장비 8칸을 모두 채워요', ok: function (s) { return SLOTS.every(function (x) { return s.eq[x.id]; }); } },
+    { id: 'full', name: '풀 장착', desc: '장비 5칸을 모두 채워요', ok: function (s) { return SLOTS.every(function (x) { return s.eq[x.id]; }); } },
     { id: 'b1', name: '첫 승리', desc: '보스를 처음 물리쳐요', ok: function (s) { return bossCount(s) >= 1; } },
     { id: 'b6', name: '보스 사냥 끝', desc: '보스 6마리를 모두 물리쳐요', ok: function (s) { return bossCount(s) >= BOSSES.length; } },
     { id: 'd7', name: '개근상', desc: '7일 연속 출석', ok: function (s) { return s.dailyStreak >= 7; } }
@@ -80,12 +80,9 @@
 
   /* ---------- 장비 (보물상자에서 나와요) ---------- */
   var SLOTS = [
-    { id: 'hat', name: '모자', stat: '초당 수익', f: 1 },
     { id: 'weapon', name: '무기', stat: '탭·공격력', f: 1 },
     { id: 'glasses', name: '안경', stat: '몬스터 드롭·보상', f: 1 },
     { id: 'cape', name: '망토', stat: '모든 수익', f: 0.6 },
-    { id: 'boots', name: '신발', stat: '복귀(오프라인) 보상', f: 1 },
-    { id: 'scarf', name: '목도리', stat: '상자 나올 확률', f: 1 },
     { id: 'shield', name: '방패', stat: '보스전 공격력', f: 1 },
     { id: 'wings', name: '날개', stat: '환생 씨앗', f: 0.5 }
   ];
@@ -94,29 +91,19 @@
     { name: '희귀', col: '#3b8be8', v: 0.2 }, { name: '영웅', col: '#9a5be0', v: 0.5 }, { name: '전설', col: '#f0a500', v: 1.2 }
   ];
   var ITEM_NAMES = {
-    hat: ['밀짚모자', '털실 모자', '마법사 모자', '기사 투구', '별빛 왕관'],
     weapon: ['나무 막대', '돌 도끼', '강철 검', '번개 지팡이', '황금 바나나 검'],
     glasses: ['동그란 안경', '선글라스', '하트 안경', '고글', '은하 안경'],
     cape: ['천 망토', '붉은 망토', '푸른 망토', '보라 망토', '무지개 망토'],
-    boots: ['헝겊 신발', '붉은 운동화', '가죽 부츠', '날개 신발', '황금 부츠'],
-    scarf: ['털 목도리', '붉은 목도리', '푸른 목도리', '별무늬 목도리', '무지개 목도리'],
     shield: ['나무 방패', '쇠 방패', '푸른 방패', '가시 방패', '황금 방패'],
     wings: ['작은 날개', '흰 날개', '푸른 날개', '박쥐 날개', '천사 날개']
   };
   var PITY_AT = 25;
   var WEIGHTS = [60, 28, 9, 2.5, 0.5], WEIGHTS_BOSS = [38, 36, 18, 6, 2];
-  var PLACE = { hat: 'translate(190 62) rotate(8) scale(1.5)', weapon: 'translate(44 222) rotate(-28)', glasses: '', cape: '', boots: '', scarf: '', shield: 'translate(266 238) rotate(8)', wings: '' };
-  var VB = { hat: '-70 -90 140 105', glasses: '95 118 160 70', weapon: '-45 -125 90 145', cape: '205 95 150 235', boots: '105 285 170 55', scarf: '135 60 140 90', shield: '-40 -48 80 96', wings: '-45 40 150 140' };
+  var PLACE = { weapon: 'translate(44 222) rotate(-28)', glasses: '', cape: '', shield: 'translate(266 238) rotate(8)', wings: '' };
+  var VB = { glasses: '95 118 160 70', weapon: '-45 -125 90 145', cape: '205 95 150 235', shield: '-40 -48 80 96', wings: '-45 40 150 140' };
   function starPts(cx, cy, ro, ri) { var pts = []; for (var k = 0; k < 10; k++) { var r = k % 2 ? ri : ro, a = -Math.PI / 2 + k * Math.PI / 5; pts.push((cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1)); } return pts.join(' '); }
   var BR = '#6a3d1b';
   var ART = {
-    hat: [
-      '<ellipse cx="0" cy="4" rx="64" ry="13" fill="#f0d27a" stroke="' + BR + '" stroke-width="4"/><path d="M-36 2Q-38-30 0-32Q38-30 36 2Z" fill="#f6df93" stroke="' + BR + '" stroke-width="4" stroke-linejoin="round"/><rect x="-36" y="-12" width="72" height="9" fill="#d9503b" stroke="' + BR + '" stroke-width="3"/>',
-      '<path d="M-42 4Q-46-44 0-46Q46-44 42 4Z" fill="#e0603b" stroke="' + BR + '" stroke-width="4" stroke-linejoin="round"/><rect x="-46" y="-8" width="92" height="16" rx="7" fill="#fff3d6" stroke="' + BR + '" stroke-width="4"/><path d="M-24-8v16M-8-8v16M8-8v16M24-8v16" stroke="#d9c7a0" stroke-width="3"/><circle cx="0" cy="-50" r="10" fill="#fff" stroke="' + BR + '" stroke-width="4"/>',
-      '<ellipse cx="0" cy="4" rx="60" ry="12" fill="#5b3bb8" stroke="#2a1a5c" stroke-width="4"/><path d="M-40 2L-6-74Q8-80 14-62 24-30 40 2Z" fill="#6f4bd8" stroke="#2a1a5c" stroke-width="4" stroke-linejoin="round"/><path d="M-40-6Q0 4 40-6" fill="none" stroke="#ffd23f" stroke-width="6"/><polygon points="' + starPts(0, -34, 11, 5) + '" fill="#ffd23f" stroke="#2a1a5c" stroke-width="2"/>',
-      '<path d="M-46 6Q-50-48 0-50Q50-48 46 6Z" fill="#b9c3cf" stroke="#3b4752" stroke-width="4" stroke-linejoin="round"/><rect x="-48" y="-6" width="96" height="14" rx="5" fill="#8a97a3" stroke="#3b4752" stroke-width="4"/><path d="M0-50Q-6-78 14-72 4-62 8-50Z" fill="#e0503b" stroke="#6a1d12" stroke-width="3"/><path d="M-26-20h52" stroke="#3b4752" stroke-width="5" stroke-linecap="round"/>',
-      '<polygon points="-46,6 -40,-34 -20,-14 0,-48 20,-14 40,-34 46,6" fill="#ffcf2e" stroke="' + BR + '" stroke-width="4" stroke-linejoin="round"/><rect x="-46" y="-4" width="92" height="12" rx="3" fill="#f0a500" stroke="' + BR + '" stroke-width="4"/><circle cx="-40" cy="-36" r="6" fill="#e0502b" stroke="' + BR + '" stroke-width="2.5"/><circle cx="0" cy="-50" r="7" fill="#3aa0e0" stroke="' + BR + '" stroke-width="2.5"/><circle cx="40" cy="-36" r="6" fill="#3fae57" stroke="' + BR + '" stroke-width="2.5"/><polygon points="' + starPts(0, -66, 9, 4) + '" fill="#fff7c2" stroke="' + BR + '" stroke-width="2"/>'
-    ],
     glasses: [
       '<circle cx="142" cy="148" r="21" fill="rgba(190,225,255,.3)" stroke="#4a2b12" stroke-width="4"/><circle cx="207" cy="155" r="21" fill="rgba(190,225,255,.3)" stroke="#4a2b12" stroke-width="4"/><path d="M162 150Q175 142 187 153" fill="none" stroke="#4a2b12" stroke-width="4"/><path d="M121 146L100 140M228 157L250 160" stroke="#4a2b12" stroke-width="4" stroke-linecap="round"/>',
       '<rect x="116" y="132" width="52" height="34" rx="13" fill="#1b1b24" stroke="#000" stroke-width="3"/><rect x="182" y="139" width="52" height="34" rx="13" fill="#1b1b24" stroke="#000" stroke-width="3"/><path d="M168 146L182 150" stroke="#000" stroke-width="5"/><path d="M124 140h14M190 147h14" stroke="rgba(255,255,255,.5)" stroke-width="3" stroke-linecap="round"/><path d="M116 142L100 138M234 150L250 154" stroke="#000" stroke-width="4" stroke-linecap="round"/>',
@@ -143,28 +130,6 @@
   };
 
   (function () {
-    function shoe(tx, ty, fill, stroke, tall, extra) {
-      return '<g transform="translate(' + tx + ' ' + ty + ')"><path d="M-24 4V' + (tall ? -30 : -6) + (tall ? 'H-12V-34H14V-14Q28-12 26 4Z' : 'Q-24-20-8-20H8Q26-18 26-4V4Z') + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="4" stroke-linejoin="round"/><rect x="-27" y="1" width="56" height="10" rx="5" fill="#fff" stroke="' + stroke + '" stroke-width="3"/>' + (extra || '') + '</g>';
-    }
-    function pair(fill, stroke, tall, extra) { return shoe(138, 318, fill, stroke, tall, extra) + shoe(228, 324, fill, stroke, tall, extra); }
-    var wing = '<path d="M-26 6Q-52-18-44 10-36 0-28 8Z" fill="#fff" stroke="#3b4752" stroke-width="3" stroke-linejoin="round"/>';
-    ART.boots = [
-      pair('#d8d2c0', '#6a6450', false),
-      pair('#e0503b', '#7a1d12', false, '<path d="M-10-14l14 0M-12-8l16 0" stroke="#fff" stroke-width="3" stroke-linecap="round"/>'),
-      pair('#8a5a2b', '#4a2b12', true, '<rect x="-14" y="-36" width="30" height="7" rx="3" fill="#6a3d1b" stroke="#4a2b12" stroke-width="3"/>'),
-      pair('#7fb8ff', '#17407a', false, wing),
-      pair('#ffcf2e', '#6a3d1b', true, '<polygon points="' + starPts(0, -50, 8, 3.5) + '" fill="#fff7c2" stroke="#6a3d1b" stroke-width="2"/>')
-    ];
-    function scarf(c, d, extra) {
-      return '<path d="M236 94L264 134 244 142 226 104Z" fill="' + c + '" stroke="' + d + '" stroke-width="4" stroke-linejoin="round"/><path d="M146 76Q196 102 254 80L258 100Q198 126 142 98Z" fill="' + c + '" stroke="' + d + '" stroke-width="4" stroke-linejoin="round"/>' + (extra || '');
-    }
-    ART.scarf = [
-      scarf('#cfc8b4', '#8a8470', '<path d="M170 88l4 20M190 94l4 20M212 96l4 20M234 90l4 20" stroke="#8a8470" stroke-width="3"/>'),
-      scarf('#e0503b', '#7a1d12', '<path d="M248 138l-10 6M256 134l-10 6" stroke="#7a1d12" stroke-width="3"/>'),
-      scarf('#3b82e0', '#17407a', '<path d="M170 88l4 20M200 96l4 20M230 90l4 20" stroke="#fff" stroke-width="4" stroke-linecap="round"/>'),
-      scarf('#8a4bd8', '#3d1a70', '<polygon points="' + starPts(176, 100, 7, 3) + '" fill="#ffd23f"/><polygon points="' + starPts(214, 100, 7, 3) + '" fill="#ffd23f"/><polygon points="' + starPts(250, 120, 6, 2.6) + '" fill="#ffd23f"/>'),
-      '<defs><linearGradient id="sf@" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff5a5a"/><stop offset=".25" stop-color="#ffd23f"/><stop offset=".5" stop-color="#4fd16a"/><stop offset=".75" stop-color="#3b9be8"/><stop offset="1" stop-color="#b06bff"/></linearGradient></defs>' + scarf('url(#sf@)', '#6a3d1b')
-    ];
     ART.shield = [
       '<circle r="27" fill="#c58a4a" stroke="' + BR + '" stroke-width="4"/><path d="M-14-24V24M0-27V27M14-24V24" stroke="#8a5a2b" stroke-width="3"/><circle r="8" fill="#aab4c0" stroke="#3b4752" stroke-width="3"/>',
       '<circle r="27" fill="#aab4c0" stroke="#3b4752" stroke-width="4"/><circle r="19" fill="none" stroke="#6f7c89" stroke-width="3"/><circle r="7" fill="#e6edf5" stroke="#3b4752" stroke-width="3"/><circle cx="0" cy="-22" r="2.4" fill="#3b4752"/><circle cx="0" cy="22" r="2.4" fill="#3b4752"/><circle cx="-22" cy="0" r="2.4" fill="#3b4752"/><circle cx="22" cy="0" r="2.4" fill="#3b4752"/>',
@@ -281,7 +246,7 @@
   var state;
   function freshState() {
     var lv = {}; UPGRADES.forEach(function (u) { lv[u.id] = 0; });
-    return { bananas: 0, total: 0, run: 0, seeds: 0, resets: 0, chests: 10, pend: null, pity: 0, opened: 0, iid: 0, items: [], eq: { hat: 0, weapon: 0, glasses: 0, cape: 0, boots: 0, scarf: 0, shield: 0, wings: 0 }, wave: 1, wk: 0, kills: 0, auto: true, bosses: {}, spent: 0, perks: {}, ach: {}, golds: 0, taps: 0, levels: lv, lastSeen: Date.now(), dailyLast: '', dailyStreak: 0 };
+    return { bananas: 0, total: 0, run: 0, seeds: 0, resets: 0, chests: 10, pend: null, pity: 0, opened: 0, iid: 0, items: [], eq: { weapon: 0, glasses: 0, cape: 0, shield: 0, wings: 0 }, wave: 1, wk: 0, kills: 0, auto: true, bosses: {}, spent: 0, perks: {}, ach: {}, golds: 0, taps: 0, levels: lv, lastSeen: Date.now(), dailyLast: '', dailyStreak: 0 };
   }
   function num(v) { v = +v; return isFinite(v) && v > 0 ? v : 0; }
   function sanitize(s) {
@@ -299,6 +264,10 @@
       if (it && SLOTS.some(function (x) { return x.id === it.s; }) && it.r >= 0 && it.r <= 4 && it.id > 0) base.items.push({ id: Math.floor(it.id), s: it.s, r: Math.floor(it.r) });
     });
     if (s.pend && SLOTS.some(function (x) { return x.id === s.pend.s; }) && s.pend.r >= 0 && s.pend.r <= 4 && s.pend.id > 0) base.pend = { id: Math.floor(s.pend.id), s: s.pend.s, r: Math.floor(s.pend.r) };
+    var REMOVED = ['hat', 'boots', 'scarf'];
+    base.old = [];
+    if (s.items instanceof Array) s.items.forEach(function (it) { if (it && REMOVED.indexOf(it.s) >= 0 && it.r >= 0 && it.r <= 4) base.old.push({ r: Math.floor(it.r) }); });
+    if (s.pend && REMOVED.indexOf(s.pend.s) >= 0 && s.pend.r >= 0 && s.pend.r <= 4) base.old.push({ r: Math.floor(s.pend.r) });
     base.iid = Math.max(base.pend ? base.pend.id : 0, Math.floor(num(s.iid)), base.items.reduce(function (m, it) { return Math.max(m, it.id); }, 0));
     SLOTS.forEach(function (x) { var id = s.eq && s.eq[x.id]; base.eq[x.id] = base.items.some(function (it) { return it.id === id && it.s === x.id; }) ? id : 0; });
     base.auto = s.auto !== false;
@@ -341,7 +310,7 @@
   function perSecond() {
     var s = 0;
     UPGRADES.forEach(function (u) { if (u.ps) s += u.ps * state.levels[u.id] * msMult(state.levels[u.id]); });
-    return s * stageMult() * seedMult() * (1 + 0.1 * perk('grow')) * (1 + eqVal('hat'));
+    return s * stageMult() * seedMult() * (1 + 0.1 * perk('grow'));
   }
   function earn(x) { state.bananas += x; state.total += x; state.run += x; }
   function prestigeGain() { return Math.floor(Math.pow(state.run / SEED_BASE, 1 / 3) * (1 + eqVal('wings'))); }
@@ -527,7 +496,7 @@
     elCount.textContent = fmt(state.bananas);
     elRate.textContent = fmtRate(perSecond());
     elTap.textContent = fmtRate(tapValue(false));
-    var mult = stageMult() * seedMult(), tp = (1 + 0.25 * perk('tap')) * (1 + eqVal('weapon')), gp = (1 + 0.1 * perk('grow')) * (1 + eqVal('hat'));
+    var mult = stageMult() * seedMult(), tp = (1 + 0.25 * perk('tap')) * (1 + eqVal('weapon')), gp = 1 + 0.1 * perk('grow');
     UPGRADES.forEach(function (u) {
       var r = rows[u.id], c = cost(u), lv = state.levels[u.id], afford = state.bananas >= c, mm = msMult(lv), nm = nextMs(lv);
       r.lv.textContent = 'Lv.' + lv;
@@ -552,7 +521,7 @@
       elEvoPct.textContent = '신!';
       elEvoBar.style.width = '100%';
     }
-    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v20';
+    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v21';
   }
 
   /* ---------- 환생 (프레스티지) ---------- */
@@ -717,7 +686,7 @@
     var r = elStage.getBoundingClientRect(), m = q.el.querySelector('.mbody').getBoundingClientRect();
     pp = { x: m.left - r.left + m.width / 2, y: m.top - r.top + m.height * 0.25 };
     earn(drop); state.kills++; state.wk++;
-    if (Math.random() < 0.02 * (1 + eqVal('scarf'))) addChest(1);
+    if (Math.random() < 0.02) addChest(1);
     popAt(pp.x, pp.y, '+' + fmt(Math.max(drop, 1)), false);
     q.el.className = 'mon die s0';
     setTimeout(function () { if (q.el.parentNode) q.el.parentNode.removeChild(q.el); }, 320);
@@ -839,7 +808,13 @@
       Snd.play('buy'); paneKey = ''; save(); render(); close();
     });
   }
-  function migrateBag() {                          // 예전 가방 장비는 칸마다 가장 좋은 것만 끼고 나머지는 팔아요
+  function migrateBag() {
+    if (state.old && state.old.length) {                   // 없어진 칸(모자·신발·목도리)의 장비는 바나나로 바꿔 드려요
+      var ot = 0;
+      state.old.forEach(function (o) { ot += sellValue({ r: o.r }); });
+      state.bananas += ot; toast('없어진 장비 ' + state.old.length + '개를 바나나 ' + fmt(ot) + '개로 바꿨어요');
+      state.old = []; save();
+    }                          // 예전 가방 장비는 칸마다 가장 좋은 것만 끼고 나머지는 팔아요
     var sold = 0, total = 0;
     SLOTS.forEach(function (x) {
       var mine = state.items.filter(function (it) { return it.s === x.id; }), best = null;
@@ -869,8 +844,7 @@
     var hand = state.eq.weapon ? '' : '';
     var wp = layer('weapon');
     if (wp) wp += '<circle cx="44" cy="222" r="12" fill="#ffd23f" stroke="#6a3d1b" stroke-width="4"/>';
-    elGearOver.innerHTML = layer('scarf') + layer('shield') + layer('boots') + layer('glasses') + layer('hat') + wp;
-    elWrap.classList.toggle('has-hat', !!state.eq.hat);
+    elGearOver.innerHTML = layer('shield') + layer('glasses') + wp;
   }
   function renderChestBtn() {
     elSideCnt.textContent = state.chests; elSideChest.classList.toggle('none', state.chests < 1);
@@ -1052,7 +1026,7 @@
     var now = Date.now(), away = now - state.lastSeen;
     if (away < 60000) { state.lastSeen = now; return; }
     var secs = Math.min(away, offCap() * 3600 * 1000) / 1000;
-    var gain = perSecond() * secs * offRate() * (1 + eqVal('boots'));
+    var gain = perSecond() * secs * offRate();
     state.lastSeen = now;
     if (gain < 1) return;
     showOffline(gain, away);
