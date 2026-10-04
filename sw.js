@@ -3,13 +3,13 @@
  * - HTML·JS·CSS는 인터넷이 되면 항상 최신 파일을 받고, 안 되면 저장본을 써요.
  * - Firebase(로그인·저장) 요청은 건드리지 않고 그대로 통과시켜요.
  * - 배포할 때마다 VERSION 숫자를 올리면 옛 저장본이 정리돼요. */
-var VERSION = 'v25';
+var VERSION = 'v26';
 var CORE = 'banana-core-' + VERSION;
 var RUNTIME = 'banana-run-' + VERSION;
 var PRECACHE = [
   './', 'index.html', 'game.js', 'cloud.js', 'auth.js', 'pwa.js', 'config.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-64.png',
-  'img/normal.png', 'img/happy.png', 'img/sleep.png', 'img/angry.png', 'img/cry.png', 'img/surprise.png', 'img/dance.png', 'img/mon1.png'
+  'img/normal.png', 'img/happy.png', 'img/sleep.png', 'img/angry.png', 'img/cry.png', 'img/surprise.png', 'img/dance.png', 'img/mon1.png', 'img/mon2.png'
 ];
 
 self.addEventListener('install', function (e) {
