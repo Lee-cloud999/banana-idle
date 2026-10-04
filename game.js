@@ -535,7 +535,7 @@
       elEvoPct.textContent = '신!';
       elEvoBar.style.width = '100%';
     }
-    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v27';
+    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v28';
   }
 
   /* ---------- 환생 (프레스티지) ---------- */
@@ -637,7 +637,7 @@
   var elMon = $('mon'), elMonBody = $('monBody'), elMonBar = $('monBar'), elMons = $('mons'), elWaveLbl = $('waveLbl'), elFaceWrap = $('lunger');
   var REGIONS = ['풀밭', '숲', '황금 들판', '동굴', '화산', '우주', '신들의 정원'];
   function autoDps() { return perSecond() + tapValue(false) * 1.5; }
-  var MON_IMG = { 0: 'img/mon1.png', 1: 'img/mon2.png', 2: 'img/mon3.png' };              // 직접 그린 몬스터 그림 (없는 번호는 임시 모양)
+  var MON_IMG = { 0: 'img/mon1.png', 1: 'img/mon2.png', 2: 'img/mon3.png', 3: 'img/mon4.png' };              // 직접 그린 몬스터 그림 (없는 번호는 임시 모양)
   function monSvg(i, boss) {
     if (!boss && MON_IMG[i]) return '<img src="' + MON_IMG[i] + '" alt="" draggable="false">';
     var c = boss ? BOSSES[i].col : ['#7cc04f', '#e08a3b', '#7a8fe0', '#d95a8a', '#4fc0b8', '#9a6bdc', '#f2c230'][i % 7];
