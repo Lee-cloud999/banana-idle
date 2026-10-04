@@ -69,10 +69,86 @@
     { id: 'g30', name: '황금 사냥꾼', desc: '황금 바나나를 30번 잡아요', ok: function (s) { return s.golds >= 30; } },
     { id: 'k100', name: '사냥 시작', desc: '몬스터 100마리 처치', ok: function (s) { return s.kills >= 100; } },
     { id: 'k3000', name: '몬스터 사냥꾼', desc: '몬스터 3,000마리 처치', ok: function (s) { return s.kills >= 3000; } },
+    { id: 'ch1', name: '두근두근', desc: '보물상자를 처음 열어요', ok: function (s) { return s.opened >= 1; } },
+    { id: 'ch50', name: '상자 수집가', desc: '보물상자를 50개 열어요', ok: function (s) { return s.opened >= 50; } },
+    { id: 'lgd', name: '전설의 장비', desc: '전설 등급 장비를 얻어요', ok: function (s) { return s.items.some(function (it) { return it.r >= 4; }); } },
+    { id: 'full', name: '풀 장착', desc: '모자·무기·안경·망토를 모두 껴요', ok: function (s) { return s.eq.hat && s.eq.weapon && s.eq.glasses && s.eq.cape; } },
     { id: 'b1', name: '첫 승리', desc: '보스를 처음 물리쳐요', ok: function (s) { return bossCount(s) >= 1; } },
     { id: 'b6', name: '보스 사냥 끝', desc: '보스 6마리를 모두 물리쳐요', ok: function (s) { return bossCount(s) >= BOSSES.length; } },
     { id: 'd7', name: '개근상', desc: '7일 연속 출석', ok: function (s) { return s.dailyStreak >= 7; } }
   ];
+
+  /* ---------- 장비 (보물상자에서 나와요) ---------- */
+  var SLOTS = [
+    { id: 'hat', name: '모자', stat: '초당 수익', f: 1 },
+    { id: 'weapon', name: '무기', stat: '탭·공격력', f: 1 },
+    { id: 'glasses', name: '안경', stat: '몬스터 드롭·보상', f: 1 },
+    { id: 'cape', name: '망토', stat: '모든 수익', f: 0.6 }
+  ];
+  var RAR = [
+    { name: '일반', col: '#8d96a1', v: 0.03 }, { name: '고급', col: '#3fb757', v: 0.08 },
+    { name: '희귀', col: '#3b8be8', v: 0.2 }, { name: '영웅', col: '#9a5be0', v: 0.5 }, { name: '전설', col: '#f0a500', v: 1.2 }
+  ];
+  var ITEM_NAMES = {
+    hat: ['밀짚모자', '털실 모자', '마법사 모자', '기사 투구', '별빛 왕관'],
+    weapon: ['나무 막대', '돌 도끼', '강철 검', '번개 지팡이', '황금 바나나 검'],
+    glasses: ['동그란 안경', '선글라스', '하트 안경', '고글', '은하 안경'],
+    cape: ['천 망토', '붉은 망토', '푸른 망토', '보라 망토', '무지개 망토']
+  };
+  var INV_MAX = 40, PITY_AT = 25;
+  var WEIGHTS = [60, 28, 9, 2.5, 0.5], WEIGHTS_BOSS = [38, 36, 18, 6, 2];
+  var PLACE = { hat: 'translate(190 40) rotate(8)', weapon: 'translate(44 222) rotate(-28)', glasses: '', cape: '' };
+  var VB = { hat: '-70 -90 140 105', glasses: '95 118 160 70', weapon: '-45 -125 90 145', cape: '205 95 150 235' };
+  function starPts(cx, cy, ro, ri) { var pts = []; for (var k = 0; k < 10; k++) { var r = k % 2 ? ri : ro, a = -Math.PI / 2 + k * Math.PI / 5; pts.push((cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1)); } return pts.join(' '); }
+  var BR = '#6a3d1b';
+  var ART = {
+    hat: [
+      '<ellipse cx="0" cy="4" rx="64" ry="13" fill="#f0d27a" stroke="' + BR + '" stroke-width="4"/><path d="M-36 2Q-38-30 0-32Q38-30 36 2Z" fill="#f6df93" stroke="' + BR + '" stroke-width="4" stroke-linejoin="round"/><rect x="-36" y="-12" width="72" height="9" fill="#d9503b" stroke="' + BR + '" stroke-width="3"/>',
+      '<path d="M-42 4Q-46-44 0-46Q46-44 42 4Z" fill="#e0603b" stroke="' + BR + '" stroke-width="4" stroke-linejoin="round"/><rect x="-46" y="-8" width="92" height="16" rx="7" fill="#fff3d6" stroke="' + BR + '" stroke-width="4"/><path d="M-24-8v16M-8-8v16M8-8v16M24-8v16" stroke="#d9c7a0" stroke-width="3"/><circle cx="0" cy="-50" r="10" fill="#fff" stroke="' + BR + '" stroke-width="4"/>',
+      '<ellipse cx="0" cy="4" rx="60" ry="12" fill="#5b3bb8" stroke="#2a1a5c" stroke-width="4"/><path d="M-40 2L-6-74Q8-80 14-62 24-30 40 2Z" fill="#6f4bd8" stroke="#2a1a5c" stroke-width="4" stroke-linejoin="round"/><path d="M-40-6Q0 4 40-6" fill="none" stroke="#ffd23f" stroke-width="6"/><polygon points="' + starPts(0, -34, 11, 5) + '" fill="#ffd23f" stroke="#2a1a5c" stroke-width="2"/>',
+      '<path d="M-46 6Q-50-48 0-50Q50-48 46 6Z" fill="#b9c3cf" stroke="#3b4752" stroke-width="4" stroke-linejoin="round"/><rect x="-48" y="-6" width="96" height="14" rx="5" fill="#8a97a3" stroke="#3b4752" stroke-width="4"/><path d="M0-50Q-6-78 14-72 4-62 8-50Z" fill="#e0503b" stroke="#6a1d12" stroke-width="3"/><path d="M-26-20h52" stroke="#3b4752" stroke-width="5" stroke-linecap="round"/>',
+      '<polygon points="-46,6 -40,-34 -20,-14 0,-48 20,-14 40,-34 46,6" fill="#ffcf2e" stroke="' + BR + '" stroke-width="4" stroke-linejoin="round"/><rect x="-46" y="-4" width="92" height="12" rx="3" fill="#f0a500" stroke="' + BR + '" stroke-width="4"/><circle cx="-40" cy="-36" r="6" fill="#e0502b" stroke="' + BR + '" stroke-width="2.5"/><circle cx="0" cy="-50" r="7" fill="#3aa0e0" stroke="' + BR + '" stroke-width="2.5"/><circle cx="40" cy="-36" r="6" fill="#3fae57" stroke="' + BR + '" stroke-width="2.5"/><polygon points="' + starPts(0, -66, 9, 4) + '" fill="#fff7c2" stroke="' + BR + '" stroke-width="2"/>'
+    ],
+    glasses: [
+      '<circle cx="142" cy="148" r="21" fill="rgba(190,225,255,.3)" stroke="#4a2b12" stroke-width="4"/><circle cx="207" cy="155" r="21" fill="rgba(190,225,255,.3)" stroke="#4a2b12" stroke-width="4"/><path d="M162 150Q175 142 187 153" fill="none" stroke="#4a2b12" stroke-width="4"/><path d="M121 146L100 140M228 157L250 160" stroke="#4a2b12" stroke-width="4" stroke-linecap="round"/>',
+      '<rect x="116" y="132" width="52" height="34" rx="13" fill="#1b1b24" stroke="#000" stroke-width="3"/><rect x="182" y="139" width="52" height="34" rx="13" fill="#1b1b24" stroke="#000" stroke-width="3"/><path d="M168 146L182 150" stroke="#000" stroke-width="5"/><path d="M124 140h14M190 147h14" stroke="rgba(255,255,255,.5)" stroke-width="3" stroke-linecap="round"/><path d="M116 142L100 138M234 150L250 154" stroke="#000" stroke-width="4" stroke-linecap="round"/>',
+      '<g transform="translate(142 146) scale(1.2)"><path d="M0 14C-30-6-18-30 0-14 18-30 30-6 0 14Z" fill="#ff6fa3" stroke="#7a1d44" stroke-width="3.5" stroke-linejoin="round"/></g><g transform="translate(207 153) scale(1.2)"><path d="M0 14C-30-6-18-30 0-14 18-30 30-6 0 14Z" fill="#ff6fa3" stroke="#7a1d44" stroke-width="3.5" stroke-linejoin="round"/></g><path d="M164 144Q175 138 186 148" fill="none" stroke="#7a1d44" stroke-width="4"/>',
+      '<path d="M96 142Q175 118 256 152" fill="none" stroke="#3b4752" stroke-width="12" stroke-linecap="round"/><circle cx="142" cy="148" r="25" fill="rgba(111,208,255,.55)" stroke="#3b4752" stroke-width="6"/><circle cx="207" cy="155" r="25" fill="rgba(111,208,255,.55)" stroke="#3b4752" stroke-width="6"/><path d="M128 138q8-8 18-6M193 145q8-8 18-6" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>',
+      '<polygon points="' + starPts(142, 148, 28, 13) + '" fill="#7a4bd8" stroke="#ffd23f" stroke-width="4" stroke-linejoin="round"/><polygon points="' + starPts(207, 155, 28, 13) + '" fill="#7a4bd8" stroke="#ffd23f" stroke-width="4" stroke-linejoin="round"/><path d="M168 150Q175 146 181 153" fill="none" stroke="#ffd23f" stroke-width="4"/><circle cx="136" cy="142" r="3" fill="#fff"/><circle cx="201" cy="149" r="3" fill="#fff"/>'
+    ],
+    weapon: [
+      '<rect x="-6" y="-96" width="12" height="104" rx="5" fill="#a8672f" stroke="' + BR + '" stroke-width="4"/>',
+      '<rect x="-5" y="-90" width="10" height="98" rx="4" fill="#a8672f" stroke="' + BR + '" stroke-width="4"/><path d="M5-92Q38-96 40-66 36-44 5-48Z" fill="#aab4c0" stroke="#3b4752" stroke-width="4" stroke-linejoin="round"/>',
+      '<rect x="-17" y="-14" width="34" height="8" rx="3" fill="#c9962a" stroke="' + BR + '" stroke-width="3"/><rect x="-5" y="-6" width="10" height="16" rx="3" fill="#7a4a22" stroke="' + BR + '" stroke-width="3"/><path d="M-8-14L-8-98 0-112 8-98 8-14Z" fill="#e6edf5" stroke="#3b4752" stroke-width="4" stroke-linejoin="round"/>',
+      '<rect x="-5" y="-96" width="10" height="106" rx="4" fill="#5b3bb8" stroke="#2a1a5c" stroke-width="4"/><circle cx="0" cy="-104" r="16" fill="#ffe66b" stroke="#c77700" stroke-width="4"/><path d="M4-117L-8-102H0L-4-90 9-107H1Z" fill="#fff" stroke="#c77700" stroke-width="2" stroke-linejoin="round"/>',
+      '<rect x="-17" y="-14" width="34" height="8" rx="3" fill="' + BR + '"/><rect x="-5" y="-6" width="10" height="16" rx="3" fill="' + BR + '"/><path d="M-9-14Q-28-62 4-118 4-70 9-14Z" fill="#ffd23f" stroke="' + BR + '" stroke-width="4" stroke-linejoin="round"/><path d="M-4-30Q-13-62 2-96" fill="none" stroke="#fff7c2" stroke-width="3" stroke-linecap="round"/>'
+    ],
+    cape: (function () {
+      var cols = [['#cfc8b4', '#8a8470'], ['#e0503b', '#7a1d12'], ['#3b82e0', '#17407a'], ['#8a4bd8', '#3d1a70']], out = [];
+      cols.forEach(function (c, i) {
+        out.push('<path d="M236 112Q330 120 342 230 346 300 292 322L216 300Z" fill="' + c[0] + '" stroke="' + c[1] + '" stroke-width="5" stroke-linejoin="round"/><path d="M244 124Q320 134 332 224" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="4" stroke-linecap="round"/>' +
+          (i >= 3 ? '<polygon points="' + starPts(300, 250, 9, 4) + '" fill="#ffd23f"/><polygon points="' + starPts(320, 190, 7, 3) + '" fill="#ffd23f"/>' : ''));
+      });
+      out.push('<defs><linearGradient id="rbw@" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5a5a"/><stop offset=".25" stop-color="#ffd23f"/><stop offset=".5" stop-color="#4fd16a"/><stop offset=".75" stop-color="#3b9be8"/><stop offset="1" stop-color="#b06bff"/></linearGradient></defs><path d="M236 112Q330 120 342 230 346 300 292 322L216 300Z" fill="url(#rbw@)" stroke="#6a3d1b" stroke-width="5" stroke-linejoin="round"/><path d="M244 124Q320 134 332 224" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="4" stroke-linecap="round"/>');
+      return out;
+    })()
+  };
+  var artUid = 0;
+  function artOf(slot, tier) { return ART[slot][tier].replace(/@/g, 'u' + (++artUid)); }
+  function iconSvg(it) { return '<svg viewBox="' + VB[it.s] + '" aria-hidden="true">' + artOf(it.s, it.r) + '</svg>'; }
+  function chestSvg(open) {
+    return '<svg viewBox="' + (open ? '0 -22 120 122' : '0 0 120 100') + '" aria-hidden="true">' +
+      (open ? '<ellipse cx="60" cy="48" rx="46" ry="26" fill="#fff6a8" opacity=".75"/><path d="M14 46L24 14Q60-2 96 14L106 46Z" fill="#a8672f" stroke="#4a2b12" stroke-width="4" stroke-linejoin="round" transform="rotate(-14 14 46)"/>'
+        : '<path d="M12 46Q12 14 60 14T108 46Z" fill="#b8742f" stroke="#4a2b12" stroke-width="4" stroke-linejoin="round"/><path d="M40 16v30M80 16v30" stroke="#f0a500" stroke-width="7"/>') +
+      '<rect x="10" y="46" width="100" height="44" rx="6" fill="#9a5f26" stroke="#4a2b12" stroke-width="4"/><path d="M34 46v44M86 46v44" stroke="#f0a500" stroke-width="7"/><rect x="50" y="42" width="20" height="22" rx="5" fill="#ffd23f" stroke="#4a2b12" stroke-width="3.5"/><circle cx="60" cy="52" r="3.2" fill="#4a2b12"/><rect x="58.4" y="52" width="3.2" height="8" rx="1.5" fill="#4a2b12"/></svg>';
+  }
+  function itemVal(it) { var sl = SLOTS.filter(function (x) { return x.id === it.s; })[0]; return RAR[it.r].v * sl.f; }
+  function itemName(it) { return ITEM_NAMES[it.s][it.r]; }
+  function slotInfo(id) { return SLOTS.filter(function (x) { return x.id === id; })[0]; }
+  function itemById(id) { for (var k = 0; k < state.items.length; k++) if (state.items[k].id === id) return state.items[k]; return null; }
+  function eqVal(slot) { var it = itemById(state.eq[slot]); return it ? itemVal(it) : 0; }
+  function itemStat(it) { return slotInfo(it.s).stat + ' +' + Math.round(itemVal(it) * 100) + '%'; }
+
   var ICONS = {
     lab: '<svg viewBox="0 0 40 40"><path d="M15 5h10M17 5v10L8 32a3 3 0 0 0 3 4h18a3 3 0 0 0 3-4L23 15V5" fill="#d7f1ff" stroke="#2f5683" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><path d="M11 26h18l3 6a3 3 0 0 1-3 4H11a3 3 0 0 1-3-4z" fill="#ffd23f" stroke="#2f5683" stroke-width="2.5" stroke-linejoin="round"/><circle cx="18" cy="30" r="2" fill="#fff"/><circle cx="24" cy="32" r="1.5" fill="#fff"/></svg>',
     rocket: '<svg viewBox="0 0 40 40"><path d="M20 3c7 5 9 13 8 22H12c-1-9 1-17 8-22z" fill="#f4f6fa" stroke="#3b4752" stroke-width="2.5" stroke-linejoin="round"/><circle cx="20" cy="15" r="4" fill="#6aa0d6" stroke="#3b4752" stroke-width="2.5"/><path d="M12 22l-5 8 6-2M28 22l5 8-6-2" fill="#e0603b" stroke="#6a2d17" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 29h8l-4 8z" fill="#ffd23f" stroke="#c77700" stroke-width="2" stroke-linejoin="round"/></svg>',
@@ -154,7 +230,7 @@
   var state;
   function freshState() {
     var lv = {}; UPGRADES.forEach(function (u) { lv[u.id] = 0; });
-    return { bananas: 0, total: 0, run: 0, seeds: 0, resets: 0, wave: 1, wk: 0, kills: 0, auto: true, bosses: {}, spent: 0, perks: {}, ach: {}, golds: 0, taps: 0, levels: lv, lastSeen: Date.now(), dailyLast: '', dailyStreak: 0 };
+    return { bananas: 0, total: 0, run: 0, seeds: 0, resets: 0, chests: 1, pity: 0, opened: 0, iid: 0, items: [], eq: { hat: 0, weapon: 0, glasses: 0, cape: 0 }, wave: 1, wk: 0, kills: 0, auto: true, bosses: {}, spent: 0, perks: {}, ach: {}, golds: 0, taps: 0, levels: lv, lastSeen: Date.now(), dailyLast: '', dailyStreak: 0 };
   }
   function num(v) { v = +v; return isFinite(v) && v > 0 ? v : 0; }
   function sanitize(s) {
@@ -166,6 +242,13 @@
     base.spent = Math.floor(num(s.spent)); base.golds = Math.floor(num(s.golds));
     PERKS.forEach(function (k) { base.perks[k.id] = Math.min(k.max, Math.floor(num(s.perks && s.perks[k.id]))); });
     ACHS.forEach(function (a) { if (s.ach && s.ach[a.id]) base.ach[a.id] = 1; });
+    base.chests = Math.min(999, Math.floor(num(s.chests))); base.pity = Math.floor(num(s.pity)); base.opened = Math.floor(num(s.opened));
+    if (s.chests === undefined) base.chests = 1;                    // 옛 저장 기록에도 첫 상자 하나를 드려요
+    if (s.items instanceof Array) s.items.slice(0, 60).forEach(function (it) {
+      if (it && SLOTS.some(function (x) { return x.id === it.s; }) && it.r >= 0 && it.r <= 4 && it.id > 0) base.items.push({ id: Math.floor(it.id), s: it.s, r: Math.floor(it.r) });
+    });
+    base.iid = Math.max(Math.floor(num(s.iid)), base.items.reduce(function (m, it) { return Math.max(m, it.id); }, 0));
+    SLOTS.forEach(function (x) { var id = s.eq && s.eq[x.id]; base.eq[x.id] = base.items.some(function (it) { return it.id === id && it.s === x.id; }) ? id : 0; });
     base.auto = s.auto !== false;
     base.wave = Math.max(1, Math.floor(num(s.wave))); base.wk = Math.min(9, Math.floor(num(s.wk))); base.kills = Math.floor(num(s.kills));
     BOSSES.forEach(function (b, i) { if (s.bosses && s.bosses[i]) base.bosses[i] = 1; });
@@ -199,14 +282,14 @@
   function msMult(lv) { var m = 1; for (var k = 0; k < MILESTONES.length; k++) if (lv >= MILESTONES[k]) m *= 2; return m; }
   function nextMs(lv) { for (var k = 0; k < MILESTONES.length; k++) if (lv < MILESTONES[k]) return MILESTONES[k]; return 0; }
   function achCount() { var n = 0; for (var k in state.ach) n++; return n; }
-  function seedMult() { return (1 + SEED_BONUS * state.seeds) * (1 + ACH_BONUS * achCount()) * (1 + BOSS_BONUS * bossCount(state)); }
+  function seedMult() { return (1 + SEED_BONUS * state.seeds) * (1 + ACH_BONUS * achCount()) * (1 + BOSS_BONUS * bossCount(state)) * (1 + eqVal('cape')); }
   function perk(id) { return state.perks[id] || 0; }
   function seedsFree() { return state.seeds - state.spent; }
   function cost(u) { return Math.floor(u.base * Math.pow(u.grow, state.levels[u.id])); }
   function perSecond() {
     var s = 0;
     UPGRADES.forEach(function (u) { if (u.ps) s += u.ps * state.levels[u.id] * msMult(state.levels[u.id]); });
-    return s * stageMult() * seedMult() * (1 + 0.1 * perk('grow'));
+    return s * stageMult() * seedMult() * (1 + 0.1 * perk('grow')) * (1 + eqVal('hat'));
   }
   function earn(x) { state.bananas += x; state.total += x; state.run += x; }
   function prestigeGain() { return Math.floor(Math.pow(state.run / SEED_BASE, 1 / 3)); }
@@ -217,7 +300,7 @@
     return comboStamps.length >= 10;
   }
   function tapValue(withCombo) {
-    var v = (1 + state.levels.hand * msMult(state.levels.hand)) * stageMult() * seedMult() * (1 + 0.25 * perk('tap')) + perSecond() * 0.04;
+    var v = (1 + state.levels.hand * msMult(state.levels.hand)) * stageMult() * seedMult() * (1 + 0.25 * perk('tap')) * (1 + eqVal('weapon')) + perSecond() * 0.04;
     return withCombo && comboOn() ? v * 1.5 : v;
   }
 
@@ -348,7 +431,7 @@
     g.style.setProperty('--y1', (40 + Math.random() * 20) + '%');
     g.addEventListener('pointerdown', function (e) {
       e.preventDefault(); e.stopPropagation();
-      var bonus = Math.max(perSecond() * 60, tapValue(false) * 30, 100) * (1 + 0.2 * perk('gold'));
+      var bonus = Math.max(perSecond() * 60, tapValue(false) * 30, 100) * (1 + 0.2 * perk('gold')) * (1 + eqVal('glasses'));
       earn(bonus); state.golds++;
       var r = elStage.getBoundingClientRect();
       popAt(e.clientX - r.left, e.clientY - r.top, '+' + fmt(bonus), true);
@@ -392,7 +475,7 @@
     elCount.textContent = fmt(state.bananas);
     elRate.textContent = fmtRate(perSecond());
     elTap.textContent = fmtRate(tapValue(false));
-    var mult = stageMult() * seedMult(), tp = 1 + 0.25 * perk('tap'), gp = 1 + 0.1 * perk('grow');
+    var mult = stageMult() * seedMult(), tp = (1 + 0.25 * perk('tap')) * (1 + eqVal('weapon')), gp = (1 + 0.1 * perk('grow')) * (1 + eqVal('hat'));
     UPGRADES.forEach(function (u) {
       var r = rows[u.id], c = cost(u), lv = state.levels[u.id], afford = state.bananas >= c, mm = msMult(lv), nm = nextMs(lv);
       r.lv.textContent = 'Lv.' + lv;
@@ -404,7 +487,7 @@
       else r.desc.textContent = '초당 +' + fmtRate(u.ps * mult * mm * gp) + ' (지금 ' + fmtRate(u.ps * lv * mm * mult * gp) + ')';
       r.ms.textContent = nm ? 'Lv.' + nm + '에서 효과 ×2' : '효과 최대!';
     });
-    renderPrestige(); renderBattle();
+    renderPrestige(); renderBattle(); renderGear(); renderChestBtn();
     var i = stageIndex(), next = STAGES[i + 1];
     if (next) {
       var p = (state.run - STAGES[i].at) / (next.at - STAGES[i].at);
@@ -417,7 +500,7 @@
       elEvoPct.textContent = '신!';
       elEvoBar.style.width = '100%';
     }
-    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v9';
+    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v10';
   }
 
   /* ---------- 환생 (프레스티지) ---------- */
@@ -495,8 +578,8 @@
     battle.on = false; battle.noteT = 4; spawnT = 0.9; elMon.hidden = true; elMon.classList.remove('boss');
     if (won) {
       var first = !state.bosses[i];
-      var gain = perSecond() * (first ? 300 : FARM_SECS);
-      if (first) { state.bosses[i] = 1; }
+      var gain = perSecond() * (first ? 300 : FARM_SECS) * (1 + eqVal('glasses'));
+      if (first) { state.bosses[i] = 1; addChest(1); } else if (Math.random() < 0.25) addChest(1);
       earn(gain);
       battle.rest = 0;
       battle.note = first ? b.name + ' 처치! 수익 +' + Math.round(BOSS_BONUS * 100) + '% · +' + fmt(gain) : '승리! +' + fmt(gain);
@@ -516,7 +599,7 @@
   var QUEUE_MAX = 3;
   var queue = [];                                  // 앞(0번)이 지금 맞는 몬스터
   var spawnT = 0.3, atkT = 0.5;
-  var elMon = $('mon'), elMonBody = $('monBody'), elMonBar = $('monBar'), elMons = $('mons'), elWaveLbl = $('waveLbl'), elFaceWrap = $('faces');
+  var elMon = $('mon'), elMonBody = $('monBody'), elMonBar = $('monBar'), elMons = $('mons'), elWaveLbl = $('waveLbl'), elFaceWrap = $('lunger');
   var REGIONS = ['풀밭', '숲', '황금 들판', '동굴', '화산', '우주', '신들의 정원'];
   function autoDps() { return perSecond() + tapValue(false) * 1.5; }
   function monSvg(i, boss) {
@@ -577,11 +660,12 @@
   }
   function killMon() {
     var q = queue.shift();
-    var drop = perSecond() * 0.5 + tapValue(false) * 2;
+    var drop = (perSecond() * 0.5 + tapValue(false) * 2) * (1 + eqVal('glasses'));
     var pp = { x: 0, y: 0 };
     var r = elStage.getBoundingClientRect(), m = q.el.querySelector('.mbody').getBoundingClientRect();
     pp = { x: m.left - r.left + m.width / 2, y: m.top - r.top + m.height * 0.25 };
     earn(drop); state.kills++; state.wk++;
+    if (Math.random() < 0.02) addChest(1);
     popAt(pp.x, pp.y, '+' + fmt(Math.max(drop, 1)), false);
     q.el.className = 'mon die s0';
     setTimeout(function () { if (q.el.parentNode) q.el.parentNode.removeChild(q.el); }, 320);
@@ -589,6 +673,7 @@
     setFace('happy', 500, true);
     armFront(); layoutQueue();
     if (state.wk >= 10) {
+      if (state.wave % 5 === 0) addChest(1);
       state.wk = 0; state.wave++;
       if (state.auto && stageIndex() >= 1 && battle.rest <= 0 && pickBoss() >= 0) startFight(pickBoss());
     }
@@ -650,6 +735,147 @@
   }
   elAutoBtn.addEventListener('click', function () { state.auto = !state.auto; if (state.auto && !battle.on) battle.rest = Math.min(battle.rest, 1); save(); renderBattle(); });
   elFightBtn.addEventListener('click', function () { if (!battle.on) startFight(pickBoss()); renderBattle(); });
+
+  /* ---------- 보물상자 · 장비창 ---------- */
+  var elChestBtn = $('chestBtn'), elGearBtn = $('gearBtn'), elGearUnder = $('gearUnder'), elGearOver = $('gearOver');
+  var gearKey = '';
+  function renderGear() {
+    var key = SLOTS.map(function (x) { return x.id + ':' + state.eq[x.id]; }).join('|') + (state.items.length ? '' : '-');
+    var ids = SLOTS.map(function (x) { var it = itemById(state.eq[x.id]); return it ? it.s + it.r : ''; }).join('|');
+    if (ids === gearKey) return;
+    gearKey = ids;
+    function layer(slot) {
+      var it = itemById(state.eq[slot]); if (!it) return '';
+      var glow = it.r >= 3 ? ' style="filter:drop-shadow(0 0 6px ' + RAR[it.r].col + ')"' : '';
+      return '<g' + glow + '><g transform="' + PLACE[slot] + '">' + artOf(slot, it.r) + '</g></g>';
+    }
+    elGearUnder.innerHTML = layer('cape');
+    var hand = state.eq.weapon ? '' : '';
+    var wp = layer('weapon');
+    if (wp) wp += '<circle cx="44" cy="222" r="12" fill="#ffd23f" stroke="#6a3d1b" stroke-width="4"/>';
+    elGearOver.innerHTML = layer('glasses') + layer('hat') + wp;
+    elWrap.classList.toggle('has-hat', !!state.eq.hat);
+  }
+  function renderChestBtn() {
+    elChestBtn.textContent = '상자 ' + state.chests;
+    elChestBtn.classList.toggle('has', state.chests > 0);
+  }
+  function addChest(n) {
+    state.chests += n;
+    toast('보물상자를 얻었어요! (' + state.chests + '개)');
+    Snd.play('ping'); renderChestBtn();
+  }
+  function rollRarity(boss) {
+    var w = boss ? WEIGHTS_BOSS : WEIGHTS, tot = 0, k;
+    for (k = 0; k < w.length; k++) tot += w[k];
+    var x = Math.random() * tot, r = 0;
+    for (k = 0; k < w.length; k++) { x -= w[k]; if (x <= 0) { r = k; break; } r = k; }
+    if (state.pity >= PITY_AT - 1 && r < 3) r = 3;           // 영웅 이상이 오래 안 나오면 보장
+    state.pity = r >= 3 ? 0 : state.pity + 1;
+    return r;
+  }
+  function sellValue(it) { return Math.floor((perSecond() * 15 + tapValue(false) * 20 + 30) * (1 + it.r * it.r * 2)); }
+  function equipItem(it) { state.eq[it.s] = it.id; gearKey = ''; renderGear(); render(); }
+  function openChest() {
+    if (state.chests < 1) return null;
+    state.chests--; state.opened++;
+    var it = { id: ++state.iid, s: SLOTS[Math.floor(Math.random() * SLOTS.length)].id, r: rollRarity(false) };
+    var res = { item: it, sold: 0, equipped: false, upgrade: false };
+    if (state.items.length >= INV_MAX) { res.sold = sellValue(it); state.bananas += res.sold; }
+    else {
+      state.items.push(it);
+      var cur = itemById(state.eq[it.s]);
+      if (!cur || itemVal(it) > itemVal(cur)) { res.equipped = true; res.upgrade = !!cur; equipItem(it); }
+    }
+    Snd.play(it.r >= 3 ? 'evolve' : it.r >= 2 ? 'gold' : 'buy');
+    checkAch(); save(); render();
+    return res;
+  }
+  function showChest() {
+    var m = document.createElement('div');
+    m.className = 'modal chestm'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+    document.body.appendChild(m);
+    function close() { if (m.parentNode) m.parentNode.removeChild(m); }
+    function idle() {
+      m.innerHTML = '<div class="card"><h2>보물상자</h2><div class="chestbox">' + chestSvg(false) + '</div>' +
+        '<p>' + (state.chests > 0 ? '상자가 ' + state.chests + '개 있어요' : '상자가 없어요') + '</p>' +
+        '<p class="sub">몬스터를 잡거나 5스테이지마다, 보스를 이기면, 2시간 이상 자리를 비우면 상자가 나와요</p>' +
+        '<div class="btns"><button type="button" class="no">닫기</button><button type="button" class="go"' + (state.chests > 0 ? '' : ' disabled') + '>열기</button></div></div>';
+      m.querySelector('.no').addEventListener('click', close);
+      m.querySelector('.go').addEventListener('click', openIt);
+    }
+    function openIt() {
+      if (state.chests < 1) return;
+      var box = m.querySelector('.chestbox'); box.classList.add('shake');
+      Array.prototype.forEach.call(m.querySelectorAll('button'), function (b) { b.disabled = true; });
+      setTimeout(function () {
+        var res = openChest(); if (!res) { idle(); return; }
+        var it = res.item, col = RAR[it.r].col;
+        m.innerHTML = '<div class="card"><div class="chestbox">' + chestSvg(true) + '</div>' +
+          '<div class="rcard" style="--rc:' + col + '"><div class="ibig">' + iconSvg(it) + '</div><span class="rtag">' + RAR[it.r].name + '</span><b>' + itemName(it) + '</b><span>' + itemStat(it) + '</span></div>' +
+          '<p>' + (res.sold ? '가방이 가득 차서 바나나 ' + fmt(res.sold) + '개에 팔았어요' : res.equipped ? (res.upgrade ? '더 좋아서 바로 장착했어요!' : '바로 장착했어요!') : '가방에 넣었어요') + '</p>' +
+          '<div class="btns"><button type="button" class="no">닫기</button><button type="button" class="gear">장비창</button>' +
+          (state.chests > 0 ? '<button type="button" class="go">한 번 더 (' + state.chests + ')</button>' : '') + '</div></div>';
+        m.querySelector('.no').addEventListener('click', close);
+        m.querySelector('.gear').addEventListener('click', function () { close(); showGear(); });
+        var again = m.querySelector('.go'); if (again) again.addEventListener('click', idleThenOpen);
+      }, 550);
+    }
+    function idleThenOpen() { idle(); openIt(); }
+    idle();
+  }
+  function showGear() {
+    var old = document.querySelector('.modal.gearm'); if (old && old.parentNode) old.parentNode.removeChild(old);
+    var m = document.createElement('div');
+    m.className = 'modal gearm'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+    document.body.appendChild(m);
+    function close() { if (m.parentNode) m.parentNode.removeChild(m); }
+    function paint() {
+      var slots = '';
+      SLOTS.forEach(function (x) {
+        var it = itemById(state.eq[x.id]);
+        slots += '<div class="gslot"' + (it ? ' style="--rc:' + RAR[it.r].col + '"' : '') + '>' + (it ? iconSvg(it) : '<span class="empty">–</span>') +
+          '<b>' + (it ? itemName(it) : x.name) + '</b><span>' + (it ? '+' + Math.round(itemVal(it) * 100) + '%' : '비어 있어요') + '</span></div>';
+      });
+      var list = state.items.slice().sort(function (a, b) { return (b.r - a.r) || (itemVal(b) - itemVal(a)); });
+      var rows = '';
+      list.forEach(function (it) {
+        var on = state.eq[it.s] === it.id;
+        rows += '<div class="irow' + (on ? ' on' : '') + '" style="--rc:' + RAR[it.r].col + '">' + iconSvg(it) +
+          '<div class="t"><b>' + itemName(it) + ' <i style="font-style:normal;font-weight:400">· ' + RAR[it.r].name + '</i></b><span>' + itemStat(it) + '</span></div>' +
+          '<div class="bt">' + (on ? '<span>착용 중</span>' : '<button type="button" data-eq="' + it.id + '">착용</button><button type="button" class="sell" data-sell="' + it.id + '">팔기 ' + fmt(sellValue(it)) + '</button>') + '</div></div>';
+      });
+      var sellable = state.items.filter(function (it) { return it.r <= 1 && state.eq[it.s] !== it.id; });
+      m.innerHTML = '<div class="card tall"><h2>장비</h2><div class="gslots">' + slots + '</div>' +
+        '<p class="sub">가방 ' + state.items.length + '/' + INV_MAX + ' · 상자 ' + state.chests + '개 · 열어 본 상자 ' + state.opened + '개</p>' +
+        '<div class="list">' + (rows || '<p>아직 장비가 없어요. 보물상자를 열어 보세요!</p>') + '</div>' +
+        (sellable.length ? '<button type="button" class="sellall" id="sellAll">쓰지 않는 일반·고급 ' + sellable.length + '개 한꺼번에 팔기</button>' : '') +
+        '<button type="button" class="ok close">닫기</button></div>';
+      m.querySelector('.close').addEventListener('click', close);
+      Array.prototype.forEach.call(m.querySelectorAll('[data-eq]'), function (b) {
+        b.addEventListener('click', function () { var it = itemById(+b.getAttribute('data-eq')); if (it) { equipItem(it); Snd.play('buy'); save(); paint(); } });
+      });
+      Array.prototype.forEach.call(m.querySelectorAll('[data-sell]'), function (b) {
+        b.addEventListener('click', function () {
+          var it = itemById(+b.getAttribute('data-sell')); if (!it || state.eq[it.s] === it.id) return;
+          state.bananas += sellValue(it);
+          state.items = state.items.filter(function (x) { return x.id !== it.id; });
+          Snd.play('buy'); save(); render(); paint();
+        });
+      });
+      var sa = m.querySelector('#sellAll');
+      if (sa) sa.addEventListener('click', function () {
+        var total = 0;
+        sellable.forEach(function (it) { total += sellValue(it); });
+        var ids = sellable.map(function (it) { return it.id; });
+        state.items = state.items.filter(function (x) { return ids.indexOf(x.id) < 0; });
+        state.bananas += total; Snd.play('gold'); toast('바나나 ' + fmt(total) + '개를 받았어요'); save(); render(); paint();
+      });
+    }
+    paint();
+  }
+  elChestBtn.addEventListener('click', showChest);
+  elGearBtn.addEventListener('click', showGear);
 
   /* ---------- 업적 · 씨앗 상점 ---------- */
   var elAchBtn = $('achBtn'), elPerkBtn = $('perkBtn');
@@ -739,8 +965,10 @@
       '<button type="button" class="ok">받기</button></div>';
     document.body.appendChild(m);
     var ok = m.querySelector('.ok'); ok.focus();
+    var offChests = Math.min(4, Math.floor(away / 7200000));
     ok.addEventListener('click', function () {
       earn(gain);
+      if (offChests > 0) addChest(offChests);
       document.body.removeChild(m);
       Snd.play('chime');
       lastAction = Date.now(); setFace('happy', 1200);
@@ -854,7 +1082,7 @@
     return { total: s.total, stage: STAGES[stageIndexFor(s.run)].name, seeds: s.seeds, taps: s.taps, lastSeen: s.lastSeen };
   }
   function adopt(obj) {
-    Array.prototype.forEach.call(document.querySelectorAll('.modal.offline, .modal.daily, .modal.prestige, .modal.achs, .modal.perks'), function (m) { if (m.parentNode) m.parentNode.removeChild(m); });
+    Array.prototype.forEach.call(document.querySelectorAll('.modal.offline, .modal.daily, .modal.prestige, .modal.achs, .modal.perks, .modal.chestm, .modal.gearm'), function (m) { if (m.parentNode) m.parentNode.removeChild(m); });
     state = sanitize(obj); resetField();
     shownStage = -1; applyStage(stageIndex(), false);
     render(); checkOffline(); maybeDaily(); save();
