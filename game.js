@@ -230,7 +230,7 @@
   var state;
   function freshState() {
     var lv = {}; UPGRADES.forEach(function (u) { lv[u.id] = 0; });
-    return { bananas: 0, total: 0, run: 0, seeds: 0, resets: 0, chests: 1, pend: null, pity: 0, opened: 0, iid: 0, items: [], eq: { hat: 0, weapon: 0, glasses: 0, cape: 0 }, wave: 1, wk: 0, kills: 0, auto: true, bosses: {}, spent: 0, perks: {}, ach: {}, golds: 0, taps: 0, levels: lv, lastSeen: Date.now(), dailyLast: '', dailyStreak: 0 };
+    return { bananas: 0, total: 0, run: 0, seeds: 0, resets: 0, chests: 10, pend: null, pity: 0, opened: 0, iid: 0, items: [], eq: { hat: 0, weapon: 0, glasses: 0, cape: 0 }, wave: 1, wk: 0, kills: 0, auto: true, bosses: {}, spent: 0, perks: {}, ach: {}, golds: 0, taps: 0, levels: lv, lastSeen: Date.now(), dailyLast: '', dailyStreak: 0 };
   }
   function num(v) { v = +v; return isFinite(v) && v > 0 ? v : 0; }
   function sanitize(s) {
@@ -243,7 +243,7 @@
     PERKS.forEach(function (k) { base.perks[k.id] = Math.min(k.max, Math.floor(num(s.perks && s.perks[k.id]))); });
     ACHS.forEach(function (a) { if (s.ach && s.ach[a.id]) base.ach[a.id] = 1; });
     base.chests = Math.min(999, Math.floor(num(s.chests))); base.pity = Math.floor(num(s.pity)); base.opened = Math.floor(num(s.opened));
-    if (s.chests === undefined) base.chests = 1;                    // 옛 저장 기록에도 첫 상자 하나를 드려요
+    if (s.chests === undefined) base.chests = 10;                    // 옛 저장 기록에도 첫 상자 하나를 드려요
     if (s.items instanceof Array) s.items.slice(0, 60).forEach(function (it) {
       if (it && SLOTS.some(function (x) { return x.id === it.s; }) && it.r >= 0 && it.r <= 4 && it.id > 0) base.items.push({ id: Math.floor(it.id), s: it.s, r: Math.floor(it.r) });
     });
@@ -501,7 +501,7 @@
       elEvoPct.textContent = '신!';
       elEvoBar.style.width = '100%';
     }
-    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v17';
+    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v18';
   }
 
   /* ---------- 환생 (프레스티지) ---------- */
