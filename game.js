@@ -34,7 +34,19 @@
     { id: 'off', name: '푹신한 침대', desc: '복귀 보상 +5%p, 쌓이는 시간 +1시간', max: 5, cost: function (l) { return 3 + l * 2; } },
     { id: 'start', name: '시작 선물', desc: '환생 직후 바나나를 받아요', max: 5, cost: function (l) { return 2 + l * 2; } }
   ];
+  var BOSSES = [
+    { name: '배고픈 벌레', hp: 500, col: '#7cc04f' },
+    { name: '까마귀 대장', hp: 2e4, col: '#4a4f6a' },
+    { name: '곰 대왕', hp: 7.5e5, col: '#a8672f' },
+    { name: '바나나 도둑 용', hp: 3.75e7, col: '#d9503b' },
+    { name: '외계 침략자', hp: 2.5e9, col: '#5fb3e8' },
+    { name: '차원의 마왕', hp: 2.5e11, col: '#8a4bd8' }
+  ];
+  var FIGHT_SECS = 60, REST_WIN = 8, REST_LOSE = 20;
+  var BOSS_BONUS = 0.03;                           // 처음 처치한 보스 하나당 수익 +3%
+  var FARM_SECS = 6;                               // 다시 이긴 보상: 초당 수익 6초어치
   var ACH_BONUS = 0.01;                            // 업적 하나당 수익 +1%
+  function bossCount(s) { var n = 0; for (var k in s.bosses) n++; return n; }
   function lvSum(s) { var t = 0; for (var k in s.levels) t += s.levels[k]; return t; }
   function lvMax(s) { var t = 0; for (var k in s.levels) t = Math.max(t, s.levels[k]); return t; }
   var ACHS = [
@@ -55,6 +67,8 @@
     { id: 'r10', name: '환생 달인', desc: '10번 환생해요', ok: function (s) { return s.resets >= 10; } },
     { id: 'g1', name: '반짝!', desc: '황금 바나나를 잡아요', ok: function (s) { return s.golds >= 1; } },
     { id: 'g30', name: '황금 사냥꾼', desc: '황금 바나나를 30번 잡아요', ok: function (s) { return s.golds >= 30; } },
+    { id: 'b1', name: '첫 승리', desc: '보스를 처음 물리쳐요', ok: function (s) { return bossCount(s) >= 1; } },
+    { id: 'b6', name: '보스 사냥 끝', desc: '보스 6마리를 모두 물리쳐요', ok: function (s) { return bossCount(s) >= BOSSES.length; } },
     { id: 'd7', name: '개근상', desc: '7일 연속 출석', ok: function (s) { return s.dailyStreak >= 7; } }
   ];
   var ICONS = {
@@ -138,7 +152,7 @@
   var state;
   function freshState() {
     var lv = {}; UPGRADES.forEach(function (u) { lv[u.id] = 0; });
-    return { bananas: 0, total: 0, run: 0, seeds: 0, resets: 0, spent: 0, perks: {}, ach: {}, golds: 0, taps: 0, levels: lv, lastSeen: Date.now(), dailyLast: '', dailyStreak: 0 };
+    return { bananas: 0, total: 0, run: 0, seeds: 0, resets: 0, auto: true, bosses: {}, spent: 0, perks: {}, ach: {}, golds: 0, taps: 0, levels: lv, lastSeen: Date.now(), dailyLast: '', dailyStreak: 0 };
   }
   function num(v) { v = +v; return isFinite(v) && v > 0 ? v : 0; }
   function sanitize(s) {
@@ -150,6 +164,8 @@
     base.spent = Math.floor(num(s.spent)); base.golds = Math.floor(num(s.golds));
     PERKS.forEach(function (k) { base.perks[k.id] = Math.min(k.max, Math.floor(num(s.perks && s.perks[k.id]))); });
     ACHS.forEach(function (a) { if (s.ach && s.ach[a.id]) base.ach[a.id] = 1; });
+    base.auto = s.auto !== false;
+    BOSSES.forEach(function (b, i) { if (s.bosses && s.bosses[i]) base.bosses[i] = 1; });
     base.taps = Math.floor(num(s.taps));
     base.lastSeen = num(s.lastSeen) || Date.now();
     base.dailyLast = /^\d{4}-\d{2}-\d{2}$/.test(s.dailyLast) ? s.dailyLast : '';
@@ -180,7 +196,7 @@
   function msMult(lv) { var m = 1; for (var k = 0; k < MILESTONES.length; k++) if (lv >= MILESTONES[k]) m *= 2; return m; }
   function nextMs(lv) { for (var k = 0; k < MILESTONES.length; k++) if (lv < MILESTONES[k]) return MILESTONES[k]; return 0; }
   function achCount() { var n = 0; for (var k in state.ach) n++; return n; }
-  function seedMult() { return (1 + SEED_BONUS * state.seeds) * (1 + ACH_BONUS * achCount()); }
+  function seedMult() { return (1 + SEED_BONUS * state.seeds) * (1 + ACH_BONUS * achCount()) * (1 + BOSS_BONUS * bossCount(state)); }
   function perk(id) { return state.perks[id] || 0; }
   function seedsFree() { return state.seeds - state.spent; }
   function cost(u) { return Math.floor(u.base * Math.pow(u.grow, state.levels[u.id])); }
@@ -277,6 +293,7 @@
     var combo = comboOn();
     var gain = tapValue(true);
     earn(gain); state.taps++;
+    if (battle.on) hitBoss(gain);
     var r = elStage.getBoundingClientRect();
     var x = clientX == null ? r.width / 2 : clientX - r.left;
     var y = clientY == null ? r.height * 0.55 : clientY - r.top;
@@ -383,7 +400,7 @@
       else r.desc.textContent = '초당 +' + fmtRate(u.ps * mult * mm * gp) + ' (지금 ' + fmtRate(u.ps * lv * mm * mult * gp) + ')';
       r.ms.textContent = nm ? 'Lv.' + nm + '에서 효과 ×2' : '효과 최대!';
     });
-    renderPrestige();
+    renderPrestige(); renderBattle();
     var i = stageIndex(), next = STAGES[i + 1];
     if (next) {
       var p = (state.run - STAGES[i].at) / (next.at - STAGES[i].at);
@@ -436,7 +453,7 @@
       state.seeds += gg; state.resets++;
       state.bananas = perk('start') ? 500 * Math.pow(8, perk('start')) : 0; state.run = 0;
       UPGRADES.forEach(function (u) { state.levels[u.id] = 0; });
-      comboStamps = [];
+      comboStamps = []; battle.on = false; battle.rest = 3;
       shownStage = -1; applyStage(0, false);
       Snd.play('evolve'); showBanner('환생! 씨앗 +' + fmt(gg));
       lastAction = Date.now(); setFace('happy', 1500, true); say('happy');
@@ -444,6 +461,88 @@
     });
   }
   elPrestBtn.addEventListener('click', showPrestige);
+
+  /* ---------- 보스전 · 자동전투 ---------- */
+  var battle = { on: false, boss: -1, hp: 0, left: 0, rest: 3, note: '', noteT: 0 };
+  var elBattle = $('battle'), elBossIco = $('bossIco'), elBossName = $('bossName'), elBossMsg = $('bossMsg'), elBossBar = $('bossBar'), elAutoBtn = $('autoBtn'), elFightBtn = $('fightBtn');
+  function bossSvg(i) {
+    var c = BOSSES[i].col, horns = i >= 2 ? '<path d="M9 10l4 6M31 10l-4 6" stroke="#2b1a0c" stroke-width="3" stroke-linecap="round"/>' : '';
+    var ant = i === 4 ? '<path d="M14 7l-2-4M26 7l2-4" stroke="#2b1a0c" stroke-width="2.5" stroke-linecap="round"/><circle cx="12" cy="3" r="2" fill="#ffd23f"/><circle cx="28" cy="3" r="2" fill="#ffd23f"/>' : '';
+    return '<svg viewBox="0 0 40 40" aria-hidden="true">' + horns + ant + '<circle cx="20" cy="22" r="14" fill="' + c + '" stroke="#2b1a0c" stroke-width="3"/>' +
+      '<path d="M11 17l6 3M29 17l-6 3" stroke="#2b1a0c" stroke-width="3" stroke-linecap="round"/><circle cx="14.5" cy="22" r="2.4" fill="#fff"/><circle cx="25.5" cy="22" r="2.4" fill="#fff"/>' +
+      '<path d="M13 29q7-5 14 0" fill="#fff" stroke="#2b1a0c" stroke-width="2.5" stroke-linejoin="round"/></svg>';
+  }
+  function bossAvail(i) { return stageIndex() >= i + 1; }
+  function pickBoss() {
+    var best = -1, k;
+    for (k = 0; k < BOSSES.length; k++) if (bossAvail(k)) { if (!state.bosses[k]) return k; best = k; }
+    return best;
+  }
+  function startFight(i) {
+    if (i < 0 || !bossAvail(i)) return;
+    battle.on = true; battle.boss = i; battle.hp = BOSSES[i].hp; battle.left = FIGHT_SECS; battle.note = ''; battle.noteT = 0;
+  }
+  function endFight(won) {
+    var i = battle.boss, b = BOSSES[i];
+    battle.on = false; battle.noteT = 4;
+    if (won) {
+      var first = !state.bosses[i];
+      var gain = perSecond() * (first ? 300 : FARM_SECS);
+      if (first) { state.bosses[i] = 1; }
+      earn(gain);
+      battle.rest = REST_WIN;
+      battle.note = first ? b.name + ' 처치! 수익 +' + Math.round(BOSS_BONUS * 100) + '% · +' + fmt(gain) : '승리! +' + fmt(gain);
+      Snd.play(first ? 'evolve' : 'gold');
+      if (first) showBanner('보스 처치!');
+      lastAction = Date.now(); setFace('dance', 1600, true);
+      checkAch(); checkEvolution(); save();
+    } else {
+      battle.rest = REST_LOSE;
+      battle.note = '졌어요… 더 키워서 다시 도전!';
+      Snd.play('cry');
+    }
+  }
+  function hitBoss(dmg) {
+    if (!battle.on) return;
+    battle.hp -= dmg;
+    if (battle.hp <= 0) endFight(true);
+  }
+  function tickBattle(dt) {
+    if (stageIndex() < 1) { battle.on = false; return; }
+    if (battle.on) {
+      if (!bossAvail(battle.boss)) { battle.on = false; return; }
+      battle.left -= dt;
+      hitBoss(perSecond() * dt);
+      if (battle.on && battle.left <= 0) endFight(false);
+    } else {
+      if (battle.noteT > 0) battle.noteT -= dt;
+      battle.rest -= dt;
+      if (state.auto && battle.rest <= 0) startFight(pickBoss());
+    }
+  }
+  function renderBattle() {
+    var show = stageIndex() >= 1;
+    elBattle.hidden = !show;
+    if (!show) return;
+    var i = battle.on ? battle.boss : pickBoss(), b = BOSSES[i];
+    if (elBossIco.getAttribute('data-i') !== String(i)) { elBossIco.innerHTML = bossSvg(i); elBossIco.setAttribute('data-i', String(i)); }
+    var cleared = state.bosses[i] ? ' ✓' : '';
+    elBossName.textContent = b.name + cleared;
+    if (battle.on) {
+      elBossBar.style.width = Math.max(0, battle.hp / b.hp * 100) + '%';
+      elBossMsg.textContent = '전투 중! ' + Math.ceil(battle.left) + '초 · 탭하면 같이 때려요';
+    } else {
+      elBossBar.style.width = '100%';
+      elBossMsg.textContent = battle.noteT > 0 ? battle.note : state.auto ? '다음 전투까지 ' + Math.max(0, Math.ceil(battle.rest)) + '초' : '도전 버튼으로 싸워요';
+    }
+    elFightBtn.disabled = battle.on;
+    elFightBtn.textContent = battle.on ? '전투 중' : '도전';
+    elAutoBtn.setAttribute('aria-pressed', state.auto ? 'true' : 'false');
+    elAutoBtn.textContent = state.auto ? '자동 ON' : '자동 OFF';
+    elAutoBtn.classList.toggle('on', state.auto);
+  }
+  elAutoBtn.addEventListener('click', function () { state.auto = !state.auto; if (state.auto && !battle.on) battle.rest = Math.min(battle.rest, 1); save(); renderBattle(); });
+  elFightBtn.addEventListener('click', function () { if (!battle.on) startFight(pickBoss()); renderBattle(); });
 
   /* ---------- 업적 · 씨앗 상점 ---------- */
   var elAchBtn = $('achBtn'), elPerkBtn = $('perkBtn');
@@ -501,6 +600,7 @@
     lastTick = now;
     var g = perSecond() * dt;
     if (g > 0) earn(g);
+    tickBattle(dt);
     if (faceNow === 'normal' && baseFace() === 'sleep') { showFace('sleep'); say('sleep', true); }
     if (faceNow === 'sleep' && baseFace() === 'normal') { showFace('normal'); }
     elCombo.classList.toggle('show', comboOn());
@@ -598,7 +698,7 @@
       armTimer = setTimeout(disarm, 4000); return;
     }
     clearTimeout(armTimer); disarm();
-    state = freshState(); shownStage = -1; applyStage(0, false);
+    state = freshState(); battle.on = false; battle.rest = 3; shownStage = -1; applyStage(0, false);
     save(); render(); setFace('cry', 1200, true); say('cry'); scheduleGold(true);
     try { window.dispatchEvent(new Event('banana:reset')); } catch (e) {}
   });
@@ -648,7 +748,7 @@
   }
   function adopt(obj) {
     Array.prototype.forEach.call(document.querySelectorAll('.modal.offline, .modal.daily, .modal.prestige, .modal.achs, .modal.perks'), function (m) { if (m.parentNode) m.parentNode.removeChild(m); });
-    state = sanitize(obj);
+    state = sanitize(obj); battle.on = false; battle.rest = 3;
     shownStage = -1; applyStage(stageIndex(), false);
     render(); checkOffline(); maybeDaily(); save();
   }
