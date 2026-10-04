@@ -319,6 +319,7 @@
   function applyStage(i, animate) {
     for (var k = 0; k < STAGES.length; k++) elWrap.classList.toggle('stage-' + k, k === i);
     elWrap.style.setProperty('--sc', STAGES[i].scale);
+    for (var rg = 0; rg < STAGES.length; rg++) elStage.classList.toggle('reg-' + rg, rg === i);
     elChip.textContent = STAGES[i].name;
     if (animate && i > shownStage && shownStage >= 0) {
       showBanner(STAGES[i].name + '(으)로 진화했어요!');
@@ -416,7 +417,7 @@
       elEvoPct.textContent = '신!';
       elEvoBar.style.width = '100%';
     }
-    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v7';
+    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v8';
   }
 
   /* ---------- 환생 (프레스티지) ---------- */
@@ -456,7 +457,7 @@
       state.seeds += gg; state.resets++;
       state.bananas = perk('start') ? 500 * Math.pow(8, perk('start')) : 0; state.run = 0;
       UPGRADES.forEach(function (u) { state.levels[u.id] = 0; });
-      comboStamps = []; battle.on = false; battle.rest = 3; state.wave = 1; state.wk = 0; mon.alive = false; mon.spawnIn = 0.6; elMon.classList.remove('boss'); monKey = '';
+      comboStamps = []; state.wave = 1; state.wk = 0; resetField();
       shownStage = -1; applyStage(0, false);
       Snd.play('evolve'); showBanner('환생! 씨앗 +' + fmt(gg));
       lastAction = Date.now(); setFace('happy', 1500, true); say('happy');
@@ -484,14 +485,14 @@
   function startFight(i) {
     if (i < 0 || !bossAvail(i)) return;
     battle.on = true; battle.boss = i; battle.hp = BOSSES[i].hp; battle.left = FIGHT_SECS; battle.note = ''; battle.noteT = 0;
-    mon.alive = false;
-    elMonBody.innerHTML = monSvg(i, true); monKey = 'b' + i;
+    clearQueue();
+    elMonBody.innerHTML = monSvg(i, true);
     elMon.classList.remove('die'); elMon.classList.add('boss', 'in'); elMon.hidden = false;
   }
   function endFight(won) {
     var i = battle.boss, b = BOSSES[i];
-    battle.on = false; battle.noteT = 4; mon.alive = false; mon.spawnIn = 0.9; elMon.classList.remove('boss'); monKey = '';
     var pp0 = monPos(); if (won) popAt(pp0.x, pp0.y, '처치!', true);
+    battle.on = false; battle.noteT = 4; spawnT = 0.9; elMon.hidden = true; elMon.classList.remove('boss');
     if (won) {
       var first = !state.bosses[i];
       var gain = perSecond() * (first ? 300 : FARM_SECS);
@@ -509,28 +510,39 @@
       Snd.play('cry');
     }
   }
-  /* --- 들판의 몬스터 (시작부터 자동으로 싸워요) --- */
+  /* --- 들판의 몬스터: 최대 3마리가 줄을 서서 와요 --- */
   var ATK_INT = 0.65;                              // 공격 간격(초)
   var MON_SECS = 2.2;                              // 일반 몬스터는 평균 이만큼 걸려 쓰러져요
-  var mon = { alive: false, hp: 1, max: 1, spawnIn: 0.4 };
-  var atkT = 0.5, monKey = '';
-  var elMon = $('mon'), elMonBody = $('monBody'), elMonBar = $('monBar'), elWaveLbl = $('waveLbl'), elFaceWrap = $('faces');
+  var QUEUE_MAX = 3;
+  var queue = [];                                  // 앞(0번)이 지금 맞는 몬스터
+  var spawnT = 0.3, atkT = 0.5;
+  var elMon = $('mon'), elMonBody = $('monBody'), elMonBar = $('monBar'), elMons = $('mons'), elWaveLbl = $('waveLbl'), elFaceWrap = $('faces');
+  var REGIONS = ['풀밭', '숲', '황금 들판', '동굴', '화산', '우주', '신들의 정원'];
   function autoDps() { return perSecond() + tapValue(false) * 1.5; }
   function monSvg(i, boss) {
-    var c = boss ? BOSSES[i].col : ['#7cc04f', '#e08a3b', '#7a8fe0', '#d95a8a', '#4fc0b8', '#9a6bdc'][i % 6];
+    var c = boss ? BOSSES[i].col : ['#7cc04f', '#e08a3b', '#7a8fe0', '#d95a8a', '#4fc0b8', '#9a6bdc', '#f2c230'][i % 7];
     var extra = (boss && i >= 2) || (!boss && i >= 3) ? '<path d="M16 14l3 7M44 14l-3 7" stroke="#2b1a0c" stroke-width="3" stroke-linecap="round"/>' : '';
     return '<svg viewBox="0 0 60 52" aria-hidden="true">' + extra + '<path d="M5 46C2 26 14 8 30 8s28 18 25 38z" fill="' + c + '" stroke="#2b1a0c" stroke-width="3" stroke-linejoin="round"/>' +
       '<path d="M16 22q5-5 10-2" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="3" stroke-linecap="round"/>' +
       '<path d="M17 25l8 3M43 25l-8 3" stroke="#2b1a0c" stroke-width="3" stroke-linecap="round"/><circle cx="21" cy="31" r="3.2" fill="#fff"/><circle cx="39" cy="31" r="3.2" fill="#fff"/>' +
       '<circle cx="21.8" cy="31.4" r="1.5" fill="#2b1a0c"/><circle cx="38.2" cy="31.4" r="1.5" fill="#2b1a0c"/><path d="M23 40q7-5 14 0" fill="#fff" stroke="#2b1a0c" stroke-width="2.5" stroke-linejoin="round"/></svg>';
   }
+  function frontBody() { return battle.on ? elMonBody : queue.length ? queue[0].el.querySelector('.mbody') : null; }
   function monPos() {
-    var r = elStage.getBoundingClientRect(), m = elMonBody.getBoundingClientRect();
+    var r = elStage.getBoundingClientRect(), body = frontBody();
+    if (!body) return { x: r.width * 0.7, y: r.height * 0.6 };
+    var m = body.getBoundingClientRect();
     return { x: m.left - r.left + m.width / 2, y: m.top - r.top + m.height * 0.25 };
   }
-  function flash() { elMon.classList.remove('hit'); void elMon.offsetWidth; elMon.classList.add('hit'); }
+  function flash() {
+    var el = battle.on ? elMon : queue.length ? queue[0].el : null;
+    if (!el) return;
+    el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit');
+  }
+  function lunge() { elFaceWrap.classList.remove('atk'); void elFaceWrap.offsetWidth; elFaceWrap.classList.add('atk'); }
   function shoot() {
-    var r = elStage.getBoundingClientRect(), f = elFaceWrap.getBoundingClientRect(), m = elMonBody.getBoundingClientRect();
+    var body = frontBody(); if (!body) return;
+    var r = elStage.getBoundingClientRect(), f = elFaceWrap.getBoundingClientRect(), m = body.getBoundingClientRect();
     var sx = f.left - r.left + f.width * 0.8, sy = f.top - r.top + f.height * 0.55;
     var ex = m.left - r.left + m.width * 0.35, ey = m.top - r.top + m.height * 0.55;
     var b = document.createElement('div');
@@ -540,24 +552,42 @@
     elFx.appendChild(b);
     setTimeout(function () { if (b.parentNode) b.parentNode.removeChild(b); }, 330);
   }
-  function lunge() { elFaceWrap.classList.remove('atk'); void elFaceWrap.offsetWidth; elFaceWrap.classList.add('atk'); }
+  function layoutQueue() {
+    queue.forEach(function (q, i) { q.el.className = 'mon s' + i + (q.fresh ? ' in' : ''); q.fresh = false; });
+  }
+  function armFront() {                            // 맨 앞에 선 몬스터는 지금 내 공격력에 맞는 체력이 돼요
+    if (!queue.length) return;
+    var q = queue[0];
+    if (q.armed) return;
+    q.armed = true;
+    q.max = q.hp = Math.max(3, autoDps() * MON_SECS * (0.85 + Math.random() * 0.3));
+  }
   function spawnMon() {
-    var si = Math.min(stageIndex(), 5);
-    mon.max = mon.hp = Math.max(3, autoDps() * MON_SECS * (0.85 + Math.random() * 0.3));
-    mon.alive = true;
-    var key = 'm' + si;
-    if (monKey !== key) { elMonBody.innerHTML = monSvg(si, false); monKey = key; }
-    elMon.classList.remove('die', 'boss'); elMon.classList.add('in');
-    elMon.hidden = false;
+    var si = Math.min(stageIndex(), 6);
+    var el = document.createElement('div');
+    el.innerHTML = '<div class="mbar"><i></i></div><div class="mbody">' + monSvg(si, false) + '</div>';
+    el.hidden = false;
+    elMons.appendChild(el);
+    queue.push({ el: el, bar: el.querySelector('.mbar i'), hp: 1, max: 1, armed: false, fresh: true });
+    armFront(); layoutQueue();
+  }
+  function clearQueue() {
+    queue.forEach(function (q) { if (q.el.parentNode) q.el.parentNode.removeChild(q.el); });
+    queue = [];
   }
   function killMon() {
-    mon.alive = false; mon.spawnIn = 0.7;
+    var q = queue.shift();
     var drop = perSecond() * 0.5 + tapValue(false) * 2;
+    var pp = { x: 0, y: 0 };
+    var r = elStage.getBoundingClientRect(), m = q.el.querySelector('.mbody').getBoundingClientRect();
+    pp = { x: m.left - r.left + m.width / 2, y: m.top - r.top + m.height * 0.25 };
     earn(drop); state.kills++; state.wk++;
-    var pp = monPos(); popAt(pp.x, pp.y, '+' + fmt(Math.max(drop, 1)), false);
-    elMon.classList.remove('in'); elMon.classList.add('die');
+    popAt(pp.x, pp.y, '+' + fmt(Math.max(drop, 1)), false);
+    q.el.className = 'mon die s0';
+    setTimeout(function () { if (q.el.parentNode) q.el.parentNode.removeChild(q.el); }, 320);
     Snd.play('tap', { combo: true });
     setFace('happy', 500, true);
+    armFront(); layoutQueue();
     if (state.wk >= 10) {
       state.wk = 0; state.wave++;
       if (state.auto && stageIndex() >= 1 && battle.rest <= 0 && pickBoss() >= 0) startFight(pickBoss());
@@ -570,30 +600,34 @@
       battle.hp -= dmg; flash();
       pp = monPos(); popAt(pp.x + (Math.random() - .5) * 30, pp.y, fmt(Math.max(1, dmg)), false);
       if (battle.hp <= 0) endFight(true);
-    } else if (mon.alive) {
-      mon.hp -= dmg; flash();
+    } else if (queue.length) {
+      queue[0].hp -= dmg; flash();
       if (fromTap) { pp = monPos(); popAt(pp.x + (Math.random() - .5) * 30, pp.y, fmt(Math.max(1, dmg)), false); }
-      if (mon.hp <= 0) killMon();
+      if (queue[0].hp <= 0) killMon();
     }
   }
   function tickBattle(dt) {
     battle.rest -= dt;
     if (battle.noteT > 0) battle.noteT -= dt;
     if (battle.on) {
-      if (!bossAvail(battle.boss)) { battle.on = false; }
+      if (!bossAvail(battle.boss)) { battle.on = false; elMon.hidden = true; }
       else { battle.left -= dt; if (battle.left <= 0) endFight(false); }
     }
-    if (!battle.on && !mon.alive) { mon.spawnIn -= dt; if (mon.spawnIn <= 0) spawnMon(); }
+    if (!battle.on && queue.length < QUEUE_MAX) { spawnT -= dt; if (spawnT <= 0) { spawnT = 0.5; spawnMon(); } }
     atkT -= dt;
-    if (atkT <= 0 && (battle.on || mon.alive)) {
+    if (atkT <= 0 && (battle.on || queue.length)) {
       atkT = ATK_INT; lunge(); shoot();
       hitTarget(autoDps() * ATK_INT, false);
     }
   }
+  function resetField() {
+    clearQueue(); battle.on = false; battle.rest = 3; spawnT = 0.4;
+    elMon.hidden = true; elMon.classList.remove('boss');
+  }
   function renderBattle() {
-    elWaveLbl.textContent = '스테이지 ' + state.wave + '-' + (state.wk + 1);
-    if (mon.alive && !battle.on) elMonBar.style.width = Math.max(0, mon.hp / mon.max * 100) + '%';
-    else if (battle.on) elMonBar.style.width = Math.max(0, battle.hp / BOSSES[battle.boss].hp * 100) + '%';
+    elWaveLbl.textContent = '스테이지 ' + state.wave + '-' + (state.wk + 1) + ' · ' + REGIONS[Math.min(stageIndex(), REGIONS.length - 1)];
+    queue.forEach(function (q) { q.bar.style.width = Math.max(0, q.hp / q.max * 100) + '%'; });
+    if (battle.on) elMonBar.style.width = Math.max(0, battle.hp / BOSSES[battle.boss].hp * 100) + '%';
     var show = stageIndex() >= 1;
     elBattle.hidden = !show;
     if (!show) return;
@@ -771,7 +805,7 @@
       armTimer = setTimeout(disarm, 4000); return;
     }
     clearTimeout(armTimer); disarm();
-    state = freshState(); battle.on = false; battle.rest = 3; mon.alive = false; mon.spawnIn = 0.6; elMon.classList.remove('boss'); monKey = ''; shownStage = -1; applyStage(0, false);
+    state = freshState(); resetField(); shownStage = -1; applyStage(0, false);
     save(); render(); setFace('cry', 1200, true); say('cry'); scheduleGold(true);
     try { window.dispatchEvent(new Event('banana:reset')); } catch (e) {}
   });
@@ -821,7 +855,7 @@
   }
   function adopt(obj) {
     Array.prototype.forEach.call(document.querySelectorAll('.modal.offline, .modal.daily, .modal.prestige, .modal.achs, .modal.perks'), function (m) { if (m.parentNode) m.parentNode.removeChild(m); });
-    state = sanitize(obj); battle.on = false; battle.rest = 3; mon.alive = false; mon.spawnIn = 0.6; elMon.classList.remove('boss'); monKey = '';
+    state = sanitize(obj); resetField();
     shownStage = -1; applyStage(stageIndex(), false);
     render(); checkOffline(); maybeDaily(); save();
   }

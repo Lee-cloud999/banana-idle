@@ -3,7 +3,7 @@
  * - HTML·JS·CSS는 인터넷이 되면 항상 최신 파일을 받고, 안 되면 저장본을 써요.
  * - Firebase(로그인·저장) 요청은 건드리지 않고 그대로 통과시켜요.
  * - 배포할 때마다 VERSION 숫자를 올리면 옛 저장본이 정리돼요. */
-var VERSION = 'v7';
+var VERSION = 'v8';
 var CORE = 'banana-core-' + VERSION;
 var RUNTIME = 'banana-run-' + VERSION;
 var PRECACHE = [

@@ -223,7 +223,24 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
 
 /* 들판 몬스터 */
 .wavelbl { position: absolute; z-index: 2; right: 12px; top: 52px; background: rgba(0,0,0,.35); color: #fff; border-radius: 999px; padding: 2px 10px; font-family: var(--font-display); font-size: 13px; pointer-events: none; }
-.mon { position: absolute; z-index: 3; right: 5%; bottom: 10px; width: min(32%, 140px); pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.mons { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.mon { position: absolute; z-index: 3; right: 5%; bottom: 10px; width: min(32%, 140px); pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: right .35s ease, width .35s ease, opacity .35s; }
+.mons .mon.s0 { right: 22%; width: min(25%, 112px); z-index: 3; }
+.mons .mon.s1 { right: 11%; width: min(20%, 90px); z-index: 2; opacity: .92; }
+.mons .mon.s2 { right: 1.5%; width: min(16%, 72px); z-index: 1; opacity: .82; }
+.mons .mon.s1 .mbody, .mons .mon.s2 .mbody { filter: brightness(.92); }
+.stars, .stal { display: none; }
+.reg-5 .stars, .reg-6 .stars { display: block; }
+.reg-3 .stal { display: block; }
+.reg-3 .cloud, .reg-4 .cloud, .reg-5 .cloud { display: none; }
+.stage.reg-1 { --sky-a: #cfe9d0; --sky-b: #9fd4a6; --hill-a: #4f9d5a; --hill-b: #3b8049; --sun: #fff6c0; }
+.stage.reg-2 { --sky-a: #ffeab4; --sky-b: #ffd27e; --hill-a: #e8c05a; --hill-b: #cfa43e; --sun: #fffbe6; }
+.stage.reg-3 { --sky-a: #3b3050; --sky-b: #2a2238; --hill-a: #5b4a6a; --hill-b: #483a56; --sun: #b8e0ff; }
+.stage.reg-4 { --sky-a: #5a2a24; --sky-b: #8a3a22; --hill-a: #3a2a28; --hill-b: #2a1d1c; --sun: #ffb347; }
+.stage.reg-5 { --sky-a: #0b1030; --sky-b: #1a1a55; --hill-a: #3a3f7a; --hill-b: #2b2f66; --sun: #e8e8ff; }
+.stage.reg-6 { --sky-a: #ffe6f6; --sky-b: #d9c3ff; --hill-a: #f3b6d8; --hill-b: #c9a0ec; --sun: #fff3a0; }
+.reg-3 .evo-label, .reg-4 .evo-label, .reg-5 .evo-label { color: #fff; }
+.reg-3 .evo-label span:last-child, .reg-4 .evo-label span:last-child, .reg-5 .evo-label span:last-child { color: rgba(255,255,255,.75); }
 .mon[hidden] { display: none; }
 .mon.boss { width: min(42%, 190px); }
 .mon .mbar { width: 80%; height: 8px; border-radius: 999px; background: rgba(0,0,0,.3); border: 1.5px solid rgba(0,0,0,.45); overflow: hidden; }
@@ -315,8 +332,10 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
     <div class="scene" aria-hidden="true">
       <svg viewBox="0 0 400 380" preserveAspectRatio="xMidYMax slice">
         <circle cx="330" cy="70" r="30" fill="var(--sun)"/>
-        <ellipse cx="90" cy="86" rx="46" ry="14" fill="#fff" opacity=".55"/><ellipse cx="116" cy="76" rx="30" ry="12" fill="#fff" opacity=".55"/>
-        <ellipse cx="300" cy="150" rx="40" ry="11" fill="#fff" opacity=".4"/>
+        <g class="cloud"><ellipse cx="90" cy="86" rx="46" ry="14" fill="#fff" opacity=".55"/><ellipse cx="116" cy="76" rx="30" ry="12" fill="#fff" opacity=".55"/></g>
+        <ellipse class="cloud" cx="300" cy="150" rx="40" ry="11" fill="#fff" opacity=".4"/>
+        <g class="stars" fill="#fff"><circle cx="40" cy="60" r="2"/><circle cx="110" cy="120" r="1.5"/><circle cx="170" cy="50" r="2.2"/><circle cx="240" cy="110" r="1.6"/><circle cx="290" cy="40" r="2"/><circle cx="370" cy="130" r="1.8"/><circle cx="60" cy="170" r="1.4"/><circle cx="210" cy="190" r="1.6"/></g>
+        <g class="stal" fill="#1c1626"><path d="M0 0h60l-14 40-10-24-12 36-10-30-14 22z"/><path d="M150 0h70l-16 34-12-22-10 40-14-30-10 18z"/><path d="M300 0h100v26l-18 14-12-28-14 34-12-26-14 20z"/></g>
         <path d="M-10 330 Q90 262 200 300 T410 288 L410 400 L-10 400 Z" fill="var(--hill-a)"/>
         <path d="M-10 352 Q120 304 230 334 T410 322 L410 400 L-10 400 Z" fill="var(--hill-b)"/>
       </svg>
@@ -326,7 +345,8 @@ button:focus-visible { outline: 3px solid var(--banana-deep); outline-offset: 2p
       <div class="bar"><i id="evoBar"></i></div>
     </div>
     <div class="wavelbl" id="waveLbl">스테이지 1-1</div>
-    <div class="mon in" id="mon" hidden><div class="mbar"><i id="monBar"></i></div><div class="mbody" id="monBody"></div></div>
+    <div class="mons" id="mons"></div>
+    <div class="mon boss" id="mon" hidden><div class="mbar"><i id="monBar"></i></div><div class="mbody" id="monBody"></div></div>
     <div class="bubble" id="bubble"></div>
     <button class="char-btn" id="charBtn" aria-label="바나나를 눌러 수확하기">
       <div class="char-wrap stage-0" id="charWrap">
