@@ -95,7 +95,7 @@
     glasses: ['동그란 안경', '선글라스', '하트 안경', '고글', '은하 안경'],
     cape: ['천 망토', '붉은 망토', '푸른 망토', '보라 망토', '무지개 망토']
   };
-  var INV_MAX = 40, PITY_AT = 25;
+  var PITY_AT = 25;
   var WEIGHTS = [60, 28, 9, 2.5, 0.5], WEIGHTS_BOSS = [38, 36, 18, 6, 2];
   var PLACE = { hat: 'translate(190 62) rotate(8) scale(1.5)', weapon: 'translate(44 222) rotate(-28)', glasses: '', cape: '' };
   var VB = { hat: '-70 -90 140 105', glasses: '95 118 160 70', weapon: '-45 -125 90 145', cape: '205 95 150 235' };
@@ -230,7 +230,7 @@
   var state;
   function freshState() {
     var lv = {}; UPGRADES.forEach(function (u) { lv[u.id] = 0; });
-    return { bananas: 0, total: 0, run: 0, seeds: 0, resets: 0, chests: 1, pity: 0, opened: 0, iid: 0, items: [], eq: { hat: 0, weapon: 0, glasses: 0, cape: 0 }, wave: 1, wk: 0, kills: 0, auto: true, bosses: {}, spent: 0, perks: {}, ach: {}, golds: 0, taps: 0, levels: lv, lastSeen: Date.now(), dailyLast: '', dailyStreak: 0 };
+    return { bananas: 0, total: 0, run: 0, seeds: 0, resets: 0, chests: 1, pend: null, pity: 0, opened: 0, iid: 0, items: [], eq: { hat: 0, weapon: 0, glasses: 0, cape: 0 }, wave: 1, wk: 0, kills: 0, auto: true, bosses: {}, spent: 0, perks: {}, ach: {}, golds: 0, taps: 0, levels: lv, lastSeen: Date.now(), dailyLast: '', dailyStreak: 0 };
   }
   function num(v) { v = +v; return isFinite(v) && v > 0 ? v : 0; }
   function sanitize(s) {
@@ -247,7 +247,8 @@
     if (s.items instanceof Array) s.items.slice(0, 60).forEach(function (it) {
       if (it && SLOTS.some(function (x) { return x.id === it.s; }) && it.r >= 0 && it.r <= 4 && it.id > 0) base.items.push({ id: Math.floor(it.id), s: it.s, r: Math.floor(it.r) });
     });
-    base.iid = Math.max(Math.floor(num(s.iid)), base.items.reduce(function (m, it) { return Math.max(m, it.id); }, 0));
+    if (s.pend && SLOTS.some(function (x) { return x.id === s.pend.s; }) && s.pend.r >= 0 && s.pend.r <= 4 && s.pend.id > 0) base.pend = { id: Math.floor(s.pend.id), s: s.pend.s, r: Math.floor(s.pend.r) };
+    base.iid = Math.max(base.pend ? base.pend.id : 0, Math.floor(num(s.iid)), base.items.reduce(function (m, it) { return Math.max(m, it.id); }, 0));
     SLOTS.forEach(function (x) { var id = s.eq && s.eq[x.id]; base.eq[x.id] = base.items.some(function (it) { return it.id === id && it.s === x.id; }) ? id : 0; });
     base.auto = s.auto !== false;
     base.wave = Math.max(1, Math.floor(num(s.wave))); base.wk = Math.min(9, Math.floor(num(s.wk))); base.kills = Math.floor(num(s.kills));
@@ -500,7 +501,7 @@
       elEvoPct.textContent = '신!';
       elEvoBar.style.width = '100%';
     }
-    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v14';
+    elStats.textContent = '지금까지 ' + fmt(state.total) + '개 수확' + (state.resets ? ' · 환생 ' + state.resets + '번' : '') + ' · 탭 ' + state.taps.toLocaleString('ko-KR') + '번' + ' · v17';
   }
 
   /* ---------- 환생 (프레스티지) ---------- */
@@ -739,79 +740,70 @@
   /* ---------- 보물상자 · 장비창 ---------- */
   var elGearUnder = $('gearUnder'), elGearOver = $('gearOver');
   var gearKey = '';
-  var elBigChest = $('bigChest'), elBigCnt = $('bigCnt');
+  var elSideChest = $('sideChest'), elSideCnt = $('sideCnt'), elSideMsg = $('sideMsg');
   var elMainChest = $('mainChest'), elMainCnt = $('mainCnt'), elChestMsg = $('chestMsg'), elChestSub = $('chestSub');
-  var elPane = $('gearPane'), elSlots = $('gpSlots'), elGrid = $('gpGrid'), elGpCount = $('gpCount'), elGpSell = $('gpSell');
-  var tab = 'gear', paneKey = '', newIds = {};
+  var elPane = $('gearPane'), elGrid = $('gpGrid'), elGpCount = $('gpCount');
+  var tab = 'gear', paneKey = '';
   try { tab = localStorage.getItem('banana-ssuk-tab') === 'up' ? 'up' : 'gear'; } catch (e) {}
   $('mainIco').innerHTML = chestSvg(false);
   function setTab(t) {
     tab = t; try { localStorage.setItem('banana-ssuk-tab', t); } catch (e) {}
-    elPane.hidden = t !== 'gear'; elShop.hidden = t !== 'up';
+    elPane.hidden = t !== 'gear'; $('upPane').hidden = t !== 'up';
     $('tabGear').classList.toggle('on', t === 'gear'); $('tabUp').classList.toggle('on', t === 'up');
     paneKey = ''; renderChestBtn();
   }
-  function cellHtml(it, cls, tag) {
-    return '<button type="button" class="gcell ' + cls + '" style="--rc:' + RAR[it.r].col + '" data-id="' + it.id + '" aria-label="' + itemName(it) + ' ' + RAR[it.r].name + '">' + iconSvg(it) + (tag ? '<span class="tg">' + tag + '</span>' : '') + '</button>';
+  function cellHtml(sl) {
+    var it = itemById(state.eq[sl.id]);
+    if (!it) return '<div class="gcell big empty"><span class="sn">' + sl.name + '</span><span class="em">비어 있어요</span></div>';
+    return '<button type="button" class="gcell big" style="--rc:' + RAR[it.r].col + '" data-id="' + it.id + '" aria-label="' + sl.name + ' ' + itemName(it) + ' ' + RAR[it.r].name + '">' + iconSvg(it) +
+      '<span class="sn">' + sl.name + ' · ' + RAR[it.r].name + '</span><b class="nm">' + itemName(it) + '</b><span class="st">+' + Math.round(itemVal(it) * 100) + '%</span></button>';
   }
   function renderPane() {
     if (tab !== 'gear') return;
-    var sig = state.items.map(function (it) { return it.id; }).join(',') + '|' + SLOTS.map(function (x) { return state.eq[x.id]; }).join(',') + '|' + Object.keys(newIds).join(',') + '|' + Math.floor(perSecond() > 0);
+    var sig = SLOTS.map(function (x) { return state.eq[x.id]; }).join(',');
     if (sig === paneKey) return;
     paneKey = sig;
-    var sl = '';
-    SLOTS.forEach(function (x) {
-      var it = itemById(state.eq[x.id]);
-      sl += it ? cellHtml(it, 'slot', '') : '<div class="gcell slot empty" title="' + x.name + '">' + x.name + '</div>';
-    });
-    elSlots.innerHTML = sl;
-    var list = state.items.slice().sort(function (a, b) { return (b.r - a.r) || (itemVal(b) - itemVal(a)) || (b.id - a.id); });
-    var gh = '';
-    list.forEach(function (it) { gh += cellHtml(it, newIds[it.id] ? 'new' : '', state.eq[it.s] === it.id ? '착' : ''); });
-    for (var k = list.length; k < INV_MAX; k++) gh += '<div class="gcell empty"></div>';
-    elGrid.innerHTML = gh;
-    elGpCount.textContent = '가방 ' + state.items.length + '/' + INV_MAX;
-    var n = state.items.filter(function (it) { return it.r <= 1 && state.eq[it.s] !== it.id; }).length;
-    elGpSell.hidden = n < 1; elGpSell.textContent = '일반·고급 ' + n + '개 팔기';
+    elGrid.innerHTML = SLOTS.map(cellHtml).join('');
+    elGpCount.textContent = '같은 종류가 나오면 교체하거나 팔아요';
   }
   elPane.addEventListener('click', function (e) {
     var c = e.target.closest ? e.target.closest('.gcell[data-id]') : null;
     if (!c) return;
-    var it = itemById(+c.getAttribute('data-id')); if (!it) return;
-    delete newIds[it.id]; paneKey = '';
-    showItem(it);
-  });
-  elGpSell.addEventListener('click', function () {
-    var sellable = state.items.filter(function (it) { return it.r <= 1 && state.eq[it.s] !== it.id; }), total = 0;
-    sellable.forEach(function (it) { total += sellValue(it); });
-    var ids = sellable.map(function (it) { return it.id; });
-    state.items = state.items.filter(function (x) { return ids.indexOf(x.id) < 0; });
-    state.bananas += total; Snd.play('gold'); toast('바나나 ' + fmt(total) + '개를 받았어요'); paneKey = ''; save(); render();
+    var it = itemById(+c.getAttribute('data-id')); if (it) showItem(it);
   });
   function showItem(it) {
     var m = document.createElement('div');
     m.className = 'modal itemm'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
-    var on = state.eq[it.s] === it.id, cur = itemById(state.eq[it.s]);
-    var cmp = on ? '지금 끼고 있어요' : cur ? (itemVal(it) >= itemVal(cur) ? '지금 것보다 +' : '지금 것보다 ') + Math.round((itemVal(it) - itemVal(cur)) * 100) + '%p' : '비어 있는 칸이에요';
-    m.innerHTML = '<div class="card"><div class="rcard" style="--rc:' + RAR[it.r].col + '"><div class="ibig">' + iconSvg(it) + '</div><span class="rtag">' + RAR[it.r].name + ' · ' + slotInfo(it.s).name + '</span><b>' + itemName(it) + '</b><span>' + itemStat(it) + '</span><span class="cmp">' + cmp + '</span></div>' +
-      '<div class="btns"><button type="button" class="no">닫기</button>' +
-      (on ? '<button type="button" class="off">벗기</button>' : '<button type="button" class="sell">팔기 ' + fmt(sellValue(it)) + '</button><button type="button" class="go eq">착용</button>') + '</div></div>';
+    m.innerHTML = '<div class="card"><div class="rcard" style="--rc:' + RAR[it.r].col + '"><div class="ibig">' + iconSvg(it) + '</div><span class="rtag">' + RAR[it.r].name + ' · ' + slotInfo(it.s).name + '</span><b>' + itemName(it) + '</b><span>' + itemStat(it) + '</span></div>' +
+      '<div class="btns"><button type="button" class="no">닫기</button><button type="button" class="sell">팔기 +' + fmt(sellValue(it)) + '</button></div>' +
+      '<p class="sub">팔면 이 칸이 비어요. 새 장비는 상자에서 나와요</p></div>';
     document.body.appendChild(m);
     function close() { if (m.parentNode) m.parentNode.removeChild(m); }
     m.querySelector('.no').addEventListener('click', close);
     m.addEventListener('click', function (e) { if (e.target === m) close(); });
-    var q;
-    if ((q = m.querySelector('.eq'))) q.addEventListener('click', function () { equipItem(it); Snd.play('buy'); paneKey = ''; save(); render(); close(); });
-    if ((q = m.querySelector('.off'))) q.addEventListener('click', function () { state.eq[it.s] = 0; gearKey = ''; paneKey = ''; renderGear(); Snd.play('deny'); save(); render(); close(); });
-    if ((q = m.querySelector('.sell'))) q.addEventListener('click', function () {
-      state.bananas += sellValue(it); state.items = state.items.filter(function (x) { return x.id !== it.id; });
+    m.querySelector('.sell').addEventListener('click', function () {
+      state.bananas += sellValue(it);
+      state.items = state.items.filter(function (x) { return x.id !== it.id; });
+      state.eq[it.s] = 0; gearKey = ''; renderGear();
       Snd.play('buy'); paneKey = ''; save(); render(); close();
     });
   }
+  function migrateBag() {                          // 예전 가방 장비는 칸마다 가장 좋은 것만 끼고 나머지는 팔아요
+    var sold = 0, total = 0;
+    SLOTS.forEach(function (x) {
+      var mine = state.items.filter(function (it) { return it.s === x.id; }), best = null;
+      mine.forEach(function (it) { if (!best || itemVal(it) > itemVal(best)) best = it; });
+      if (state.eq[x.id] && itemById(state.eq[x.id]) && best && itemVal(itemById(state.eq[x.id])) >= itemVal(best)) best = itemById(state.eq[x.id]);
+      state.eq[x.id] = best ? best.id : 0;
+      mine.forEach(function (it) { if (it !== best) { total += sellValue(it); sold++; } });
+      state.items = state.items.filter(function (it) { return it.s !== x.id || it === best; });
+    });
+    if (sold) { state.bananas += total; toast('쓰지 않던 장비 ' + sold + '개를 팔아 바나나 ' + fmt(total) + '개를 받았어요'); save(); }
+    gearKey = ''; paneKey = '';
+  }
   $('tabGear').addEventListener('click', function () { setTab('gear'); });
   $('tabUp').addEventListener('click', function () { setTab('up'); });
-  $('bigIco').innerHTML = chestSvg(false);
-  elBigChest.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+  $('sideIco').innerHTML = chestSvg(false);
   function renderGear() {
     var key = SLOTS.map(function (x) { return x.id + ':' + state.eq[x.id]; }).join('|') + (state.items.length ? '' : '-');
     var ids = SLOTS.map(function (x) { var it = itemById(state.eq[x.id]); return it ? it.s + it.r : ''; }).join('|');
@@ -830,7 +822,8 @@
     elWrap.classList.toggle('has-hat', !!state.eq.hat);
   }
   function renderChestBtn() {
-    elBigChest.hidden = state.chests < 1 || tab === 'gear'; elBigCnt.textContent = state.chests;
+    elSideCnt.textContent = state.chests; elSideChest.classList.toggle('none', state.chests < 1);
+    elSideMsg.textContent = state.chests > 0 ? '눌러서 열기' : '상자 없음';
     elMainCnt.textContent = state.chests;
     elMainChest.classList.toggle('none', state.chests < 1);
     elChestMsg.textContent = state.chests > 0 ? '눌러서 열어요!' : '상자가 없어요';
@@ -853,18 +846,26 @@
   }
   function sellValue(it) { return Math.floor((perSecond() * 15 + tapValue(false) * 20 + 30) * (1 + it.r * it.r * 2)); }
   function equipItem(it) { state.eq[it.s] = it.id; gearKey = ''; renderGear(); render(); }
+  function swapItem(it) {                          // 새 장비를 끼고, 끼고 있던 같은 종류 장비는 팔아요
+    var old = itemById(state.eq[it.s]), gain = 0;
+    if (old) { gain = sellValue(old); state.bananas += gain; state.items = state.items.filter(function (x) { return x.id !== old.id; }); }
+    state.items.push(it); state.pend = null;
+    equipItem(it);
+    return gain;
+  }
+  function sellPending(it) {                       // 새 장비를 바로 팔아요
+    var gain = sellValue(it);
+    state.bananas += gain; state.pend = null;
+    return gain;
+  }
   function openChest() {
-    if (state.chests < 1) return null;
+    if (state.chests < 1 || state.pend) return null;
     state.chests--; state.opened++;
     var it = { id: ++state.iid, s: SLOTS[Math.floor(Math.random() * SLOTS.length)].id, r: rollRarity(false) };
-    var res = { item: it, sold: 0, equipped: false, upgrade: false };
-    if (state.items.length >= INV_MAX) { res.sold = sellValue(it); state.bananas += res.sold; }
-    else {
-      state.items.push(it);
-      var cur = itemById(state.eq[it.s]);
-      if (!cur || itemVal(it) > itemVal(cur)) { res.equipped = true; res.upgrade = !!cur; equipItem(it); }
-    }
-    if (!res.sold && !res.equipped) newIds[it.id] = 1;
+    var cur = itemById(state.eq[it.s]);
+    var res = { item: it, cur: cur, equipped: false };
+    if (!cur) { state.items.push(it); res.equipped = true; equipItem(it); }   // 빈 칸이면 바로 껴요
+    else state.pend = it;                                                       // 같은 종류가 있으면 고르게 해요
     paneKey = '';
     Snd.play(it.r >= 3 ? 'evolve' : it.r >= 2 ? 'gold' : 'buy');
     checkAch(); save(); render();
@@ -883,29 +884,45 @@
       m.querySelector('.no').addEventListener('click', close);
       m.querySelector('.go').addEventListener('click', openIt);
     }
+    function pickCard(it, label, act, glow) {
+      return '<button type="button" class="ccard' + (glow ? ' glow' : '') + '" data-act="' + act + '" style="--rc:' + RAR[it.r].col + '">' +
+        '<span class="cl">' + label + '</span><span class="ci">' + iconSvg(it) + '</span><b>' + itemName(it) + '</b><span class="cr">' + RAR[it.r].name + '</span><span class="cs">' + slotInfo(it.s).stat + ' +' + Math.round(itemVal(it) * 100) + '%</span></button>';
+    }
+    function view(it, cur, msg) {                   // 결과 화면. 같은 종류가 있으면 두 장비를 비교해서 직접 골라요
+      var col = RAR[it.r].col, pending = !!(state.pend && state.pend.id === it.id), q;
+      if (pending && cur) {
+        var vn = itemVal(it), vc = itemVal(cur), diff = Math.round((vn - vc) * 100);
+        m.innerHTML = '<div class="card"><div class="chestbox sm">' + chestSvg(true) + '</div>' +
+          '<h2>' + slotInfo(it.s).name + '이(가) 나왔어요!</h2>' +
+          '<p>' + (vn > vc ? '새 장비가 +' + diff + '%p 더 좋아요' : vn < vc ? '지금 장비가 ' + (-diff) + '%p 더 좋아요' : '둘의 성능이 같아요') + '</p>' +
+          '<div class="cmpwrap">' + pickCard(cur, '지금 장비', 'keep', vc > vn) + pickCard(it, '새 장비', 'swap', vn > vc) + '</div>' +
+          '<p class="sub">쓸 장비를 눌러 고르세요. 안 고른 장비는 바나나로 팔려요<br>지금 장비를 고르면 새 장비 +' + fmt(sellValue(it)) + ', 새 장비를 고르면 낡은 장비 +' + fmt(sellValue(cur)) + '</p></div>';
+        if ((q = m.querySelector('[data-act="swap"]'))) q.addEventListener('click', function () { var gn = swapItem(it); Snd.play('gold'); paneKey = ''; save(); render(); view(it, null, '교체했어요! 낡은 장비를 ' + fmt(gn) + '개에 팔았어요'); });
+        if ((q = m.querySelector('[data-act="keep"]'))) q.addEventListener('click', function () { var gn = sellPending(it); Snd.play('buy'); save(); render(); view(cur, null, itemName(cur) + '을(를) 그대로 써요. 새 장비를 ' + fmt(gn) + '개에 팔았어요'); });
+        return;
+      }
+      var note = msg || (!cur ? '빈 칸이라 바로 장착했어요!' : '');
+      m.innerHTML = '<div class="card"><div class="chestbox">' + chestSvg(true) + '</div>' +
+        '<div class="rcard" style="--rc:' + col + '"><div class="ibig">' + iconSvg(it) + '</div><span class="rtag">' + RAR[it.r].name + ' · ' + slotInfo(it.s).name + '</span><b>' + itemName(it) + '</b><span>' + itemStat(it) + '</span><span class="cmp">' + note + '</span></div>' +
+        '<div class="btns"><button type="button" class="no">닫기</button>' + (state.chests > 0 ? '<button type="button" class="go again">한 번 더 (' + state.chests + ')</button>' : '<button type="button" class="gear">장비 보기</button>') + '</div></div>';
+      if ((q = m.querySelector('.no'))) q.addEventListener('click', close);
+      if ((q = m.querySelector('.gear'))) q.addEventListener('click', function () { close(); setTab('gear'); });
+      if ((q = m.querySelector('.again'))) q.addEventListener('click', function () { idle(); openIt(); });
+    }
     function openIt() {
       if (state.chests < 1) return;
       var box = m.querySelector('.chestbox'); box.classList.add('shake');
       Array.prototype.forEach.call(m.querySelectorAll('button'), function (b) { b.disabled = true; });
       setTimeout(function () {
         var res = openChest(); if (!res) { idle(); return; }
-        var it = res.item, col = RAR[it.r].col;
-        m.innerHTML = '<div class="card"><div class="chestbox">' + chestSvg(true) + '</div>' +
-          '<div class="rcard" style="--rc:' + col + '"><div class="ibig">' + iconSvg(it) + '</div><span class="rtag">' + RAR[it.r].name + '</span><b>' + itemName(it) + '</b><span>' + itemStat(it) + '</span></div>' +
-          '<p>' + (res.sold ? '가방이 가득 차서 바나나 ' + fmt(res.sold) + '개에 팔았어요' : res.equipped ? (res.upgrade ? '더 좋아서 바로 장착했어요!' : '바로 장착했어요!') : '가방에 넣었어요') + '</p>' +
-          '<div class="btns"><button type="button" class="no">닫기</button><button type="button" class="gear">장비 보기</button>' +
-          (state.chests > 0 ? '<button type="button" class="go">한 번 더 (' + state.chests + ')</button>' : '') + '</div></div>';
-        m.querySelector('.no').addEventListener('click', close);
-        m.querySelector('.gear').addEventListener('click', function () { close(); setTab('gear'); });
-        var again = m.querySelector('.go'); if (again) again.addEventListener('click', idleThenOpen);
+        view(res.item, res.cur);
       }, 550);
     }
-    function idleThenOpen() { idle(); openIt(); }
-    idle();
-    if (state.chests > 0) openIt();             // 한 번 눌러서 바로 열어요
+    if (state.pend) view(state.pend, itemById(state.eq[state.pend.s]));      // 고르던 중 닫았으면 이어서 보여 줘요
+    else { idle(); if (state.chests > 0) openIt(); }                          // 한 번 눌러서 바로 열어요
   }
-  elBigChest.addEventListener('click', showChest);
-  elMainChest.addEventListener('click', function () { if (state.chests > 0) showChest(); });
+  elSideChest.addEventListener('click', function () { if (state.chests > 0 || state.pend) showChest(); });
+  elMainChest.addEventListener('click', function () { if (state.chests > 0 || state.pend) showChest(); });
 
   /* ---------- 업적 · 씨앗 상점 ---------- */
   var elAchBtn = $('achBtn'), elPerkBtn = $('perkBtn');
@@ -1082,7 +1099,9 @@
     paintSnd();
     document.addEventListener('pointerdown', function () { Snd.unlock(); }, { once: true, passive: true });
     buildShop();
+    migrateBag();
     setTab(tab);
+    if (state.pend) setTimeout(showChest, 500);
     applyStage(stageIndex(), false);
     render();
     checkOffline();
@@ -1114,7 +1133,8 @@
   }
   function adopt(obj) {
     Array.prototype.forEach.call(document.querySelectorAll('.modal.offline, .modal.daily, .modal.prestige, .modal.achs, .modal.perks, .modal.chestm, .modal.gearm'), function (m) { if (m.parentNode) m.parentNode.removeChild(m); });
-    state = sanitize(obj); resetField();
+    state = sanitize(obj); resetField(); migrateBag(); gearKey = '';
+    if (state.pend) setTimeout(showChest, 500);
     shownStage = -1; applyStage(stageIndex(), false);
     render(); checkOffline(); maybeDaily(); save();
   }
